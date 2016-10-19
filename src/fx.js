@@ -1,6 +1,7 @@
 /**
  * Import dependencies
  */
+import easingFunctions from './easing';
 import { getProperties, setProperties } from './props';
 
 /**
@@ -8,28 +9,6 @@ import { getProperties, setProperties } from './props';
  */
 const defaultDuration = 700;
 const defaultEasing = 'ease-out';
-
-/**
- * Transitional easing functions
- */
-const easingFunctions = {
-
-    linear(t, b, c, d) {
-        return c * t / d + b;
-    },
-
-    'ease-in'(t, b, c, d) {
-        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
-    },
-
-    'ease-out'(t, b, c, d) {
-        return c * Math.sin(t / d * (Math.PI / 2)) + b;
-    },
-
-    'ease-in-out'(t, b, c, d) {
-        return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
-    }
-};
 
 /**
  * Animation class
