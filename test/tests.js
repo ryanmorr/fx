@@ -8271,17 +8271,24 @@ var FX = function () {
             if (!this.startTime) {
                 this.startTime = timestamp;
             }
-            if (timestamp < this.startTime + this.duration) {
-                this.currentTime = timestamp - this.startTime;
+            var startTime = this.startTime,
+                duration = this.duration;
+            if (timestamp < startTime + duration) {
                 var prop = void 0,
                     start = void 0,
                     end = void 0;
-                for (prop in this.startProps) {
-                    start = this.startProps[prop];
-                    end = this.endProps[prop];
-                    this.frame[prop] = this.easingFunction(this.currentTime, start, end - start, this.duration);
+                var currentTime = timestamp - startTime,
+                    frame = this.frame,
+                    startProps = this.startProps,
+                    endProps = this.endProps,
+                    easingFunction = this.easingFunction;
+                for (prop in startProps) {
+                    start = startProps[prop];
+                    end = endProps[prop];
+                    frame[prop] = easingFunction(currentTime, start, end - start, duration);
                 }
-                (0, _props.setProperties)(this.el, this.frame);
+                this.currentTime = currentTime;
+                (0, _props.setProperties)(this.el, frame);
                 requestAnimationFrame(this.step.bind(this));
             } else {
                 (0, _props.setProperties)(this.el, this.endProps);
