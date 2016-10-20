@@ -19,7 +19,7 @@ const floor = Math.floor;
  * @api private
  */
 function getStyle(el, prop) {
-    const style = document.defaultView.getComputedStyle(el, null);
+    const style = el.ownerDocument.defaultView.getComputedStyle(el, null);
     return prop in style ? style[prop] : null;
 }
 

@@ -15,7 +15,7 @@ const defaultEasing = 'ease-out';
  * Animation class
  *
  * @class FX
- * @api private
+ * @api public
  */
 class FX {
 

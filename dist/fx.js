@@ -67,7 +67,7 @@ var defaultEasing = 'ease-out';
  * Animation class
  *
  * @class FX
- * @api private
+ * @api public
  */
 
 var FX = function () {
@@ -239,7 +239,7 @@ var floor = Math.floor;
  * @api private
  */
 function getStyle(el, prop) {
-    var style = document.defaultView.getComputedStyle(el, null);
+    var style = el.ownerDocument.defaultView.getComputedStyle(el, null);
     return prop in style ? style[prop] : null;
 }
 
