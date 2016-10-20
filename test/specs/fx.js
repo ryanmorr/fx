@@ -48,12 +48,11 @@ describe('fx', () => {
         fx(el).animate({
             width: 100,
             height: 100
-        }, 1000);
-        setTimeout(() => {
+        }).then(() => {
             expect(el.style.width).to.equal('100px');
             expect(el.style.height).to.equal('100px');
             done();
-        }, 1100);
+        });
     });
 
     it('should support animating colors', (done) => {
@@ -62,25 +61,24 @@ describe('fx', () => {
             color: 'rgb(0, 0, 255)',
             backgroundColor: '#00FFFF',
             borderColor: '#01F'
-        }, 1000);
-        setTimeout(() => {
+        }).then(() => {
             expect(el.style.color).to.equal('rgb(0, 0, 255)');
             expect(el.style.borderColor).to.equal('rgb(0, 17, 255)');
             expect(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
             done();
-        }, 1100);
+        });
     });
 
     it('should support scroll animations', (done) => {
         const el = document.createElement('div');
-        el.style.cssText = 'height: 100px; overflow: scroll';
-        el.innerHTML = '<div style="height: 1000px"></div>';
+        el.style.height = '100px';
+        el.style.overflow = 'scroll';
+        el.innerHTML = '<div style="height: 1000px;"></div>';
         document.body.appendChild(el);
-        fx(el).animate({scrollTop: 200}, 1000);
-        setTimeout(() => {
+        fx(el).animate({scrollTop: 200}).then(() => {
             expect(el.scrollTop).to.equal(200);
             document.body.removeChild(el);
             done();
-        }, 1100);
+        });
     });
 });
