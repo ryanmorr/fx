@@ -37,6 +37,7 @@
     "jquery": "^3.1.1",
     "mocha": "^2.4.5",
     "phantomjs-prebuilt": "^2.1.12",
+    "promise-polyfill": "^6.0.2",
     "sinon": "^1.17.6",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"

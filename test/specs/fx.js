@@ -1,7 +1,11 @@
 /* eslint-disable max-len */
 
+import Promise from 'promise-polyfill';
 import { expect } from 'chai';
 import fx from '../../src/fx';
+
+// Polyfill promises for PhantomJS
+window.Promise = Promise;
 
 describe('fx', () => {
     it('should support providing a DOM element', () => {
@@ -45,5 +49,13 @@ describe('fx', () => {
             expect(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
             done();
         }, 1100);
+    });
+
+    it('should support promises', (done) => {
+        const el = document.createElement('div');
+        fx(el).animate({width: 100}).then(() => {
+            expect(el.style.width).to.equal('100px');
+            done();
+        });
     });
 });

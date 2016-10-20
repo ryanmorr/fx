@@ -113,54 +113,59 @@ var FX = function () {
     }, {
         key: 'animate',
         value: function animate(props) {
+            var _this = this;
+
             var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDuration;
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
-            var el = this.el;
-            var frame = Object.create(null);
-            var easingFunction = _easing2.default[easing];
-            var startTime = void 0,
-                currentTime = void 0,
-                startProps = void 0,
-                endProps = void 0;
-            var step = function step(timestamp) {
-                if (!startTime) {
-                    startTime = timestamp;
-                }
-                if (timestamp < startTime + duration) {
-                    currentTime = timestamp - startTime;
-                    var start = void 0,
-                        end = void 0,
-                        prop = void 0,
-                        i = void 0,
-                        len = void 0;
-                    for (prop in startProps) {
-                        start = startProps[prop];
-                        end = endProps[prop];
-                        if ((0, _util.isArray)(start)) {
-                            frame[prop] = [];
-                            for (i = 0, len = start.length; i < len; i++) {
-                                frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
-                            }
-                        } else {
-                            frame[prop] = easingFunction(currentTime, start, end - start, duration);
-                        }
+            return new Promise(function (resolve) {
+                var el = _this.el;
+                var frame = Object.create(null);
+                var easingFunction = _easing2.default[easing];
+                var startTime = void 0,
+                    currentTime = void 0,
+                    startProps = void 0,
+                    endProps = void 0;
+                var step = function step(timestamp) {
+                    if (!startTime) {
+                        startTime = timestamp;
                     }
-                    (0, _props.setProperties)(el, frame);
+                    if (timestamp < startTime + duration) {
+                        currentTime = timestamp - startTime;
+                        var start = void 0,
+                            end = void 0,
+                            prop = void 0,
+                            i = void 0,
+                            len = void 0;
+                        for (prop in startProps) {
+                            start = startProps[prop];
+                            end = endProps[prop];
+                            if ((0, _util.isArray)(start)) {
+                                frame[prop] = [];
+                                for (i = 0, len = start.length; i < len; i++) {
+                                    frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
+                                }
+                            } else {
+                                frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                            }
+                        }
+                        (0, _props.setProperties)(el, frame);
+                        requestAnimationFrame(step);
+                    } else {
+                        (0, _props.setProperties)(el, endProps);
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(function () {
+                    var _getProperties = (0, _props.getProperties)(el, props);
+
+                    var _getProperties2 = _slicedToArray(_getProperties, 2);
+
+                    startProps = _getProperties2[0];
+                    endProps = _getProperties2[1];
+
                     requestAnimationFrame(step);
-                } else {
-                    (0, _props.setProperties)(el, endProps);
-                }
-            };
-            requestAnimationFrame(function () {
-                var _getProperties = (0, _props.getProperties)(el, props);
-
-                var _getProperties2 = _slicedToArray(_getProperties, 2);
-
-                startProps = _getProperties2[0];
-                endProps = _getProperties2[1];
-
-                requestAnimationFrame(step);
+                });
             });
         }
     }]);

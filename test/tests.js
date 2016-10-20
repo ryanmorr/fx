@@ -8145,6 +8145,241 @@ Library.prototype.test = function(obj, type) {
 };
 
 },{}],41:[function(require,module,exports){
+(function (root) {
+
+  // Store setTimeout reference so promise-polyfill will be unaffected by
+  // other code modifying setTimeout (like sinon.useFakeTimers())
+  var setTimeoutFunc = setTimeout;
+
+  function noop() {}
+  
+  // Polyfill for Function.prototype.bind
+  function bind(fn, thisArg) {
+    return function () {
+      fn.apply(thisArg, arguments);
+    };
+  }
+
+  function Promise(fn) {
+    if (typeof this !== 'object') throw new TypeError('Promises must be constructed via new');
+    if (typeof fn !== 'function') throw new TypeError('not a function');
+    this._state = 0;
+    this._handled = false;
+    this._value = undefined;
+    this._deferreds = [];
+
+    doResolve(fn, this);
+  }
+
+  function handle(self, deferred) {
+    while (self._state === 3) {
+      self = self._value;
+    }
+    if (self._state === 0) {
+      self._deferreds.push(deferred);
+      return;
+    }
+    self._handled = true;
+    Promise._immediateFn(function () {
+      var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+      if (cb === null) {
+        (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
+        return;
+      }
+      var ret;
+      try {
+        ret = cb(self._value);
+      } catch (e) {
+        reject(deferred.promise, e);
+        return;
+      }
+      resolve(deferred.promise, ret);
+    });
+  }
+
+  function resolve(self, newValue) {
+    try {
+      // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+      if (newValue === self) throw new TypeError('A promise cannot be resolved with itself.');
+      if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+        var then = newValue.then;
+        if (newValue instanceof Promise) {
+          self._state = 3;
+          self._value = newValue;
+          finale(self);
+          return;
+        } else if (typeof then === 'function') {
+          doResolve(bind(then, newValue), self);
+          return;
+        }
+      }
+      self._state = 1;
+      self._value = newValue;
+      finale(self);
+    } catch (e) {
+      reject(self, e);
+    }
+  }
+
+  function reject(self, newValue) {
+    self._state = 2;
+    self._value = newValue;
+    finale(self);
+  }
+
+  function finale(self) {
+    if (self._state === 2 && self._deferreds.length === 0) {
+      Promise._immediateFn(function() {
+        if (!self._handled) {
+          Promise._unhandledRejectionFn(self._value);
+        }
+      });
+    }
+
+    for (var i = 0, len = self._deferreds.length; i < len; i++) {
+      handle(self, self._deferreds[i]);
+    }
+    self._deferreds = null;
+  }
+
+  function Handler(onFulfilled, onRejected, promise) {
+    this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+    this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+    this.promise = promise;
+  }
+
+  /**
+   * Take a potentially misbehaving resolver function and make sure
+   * onFulfilled and onRejected are only called once.
+   *
+   * Makes no guarantees about asynchrony.
+   */
+  function doResolve(fn, self) {
+    var done = false;
+    try {
+      fn(function (value) {
+        if (done) return;
+        done = true;
+        resolve(self, value);
+      }, function (reason) {
+        if (done) return;
+        done = true;
+        reject(self, reason);
+      });
+    } catch (ex) {
+      if (done) return;
+      done = true;
+      reject(self, ex);
+    }
+  }
+
+  Promise.prototype['catch'] = function (onRejected) {
+    return this.then(null, onRejected);
+  };
+
+  Promise.prototype.then = function (onFulfilled, onRejected) {
+    var prom = new (this.constructor)(noop);
+
+    handle(this, new Handler(onFulfilled, onRejected, prom));
+    return prom;
+  };
+
+  Promise.all = function (arr) {
+    var args = Array.prototype.slice.call(arr);
+
+    return new Promise(function (resolve, reject) {
+      if (args.length === 0) return resolve([]);
+      var remaining = args.length;
+
+      function res(i, val) {
+        try {
+          if (val && (typeof val === 'object' || typeof val === 'function')) {
+            var then = val.then;
+            if (typeof then === 'function') {
+              then.call(val, function (val) {
+                res(i, val);
+              }, reject);
+              return;
+            }
+          }
+          args[i] = val;
+          if (--remaining === 0) {
+            resolve(args);
+          }
+        } catch (ex) {
+          reject(ex);
+        }
+      }
+
+      for (var i = 0; i < args.length; i++) {
+        res(i, args[i]);
+      }
+    });
+  };
+
+  Promise.resolve = function (value) {
+    if (value && typeof value === 'object' && value.constructor === Promise) {
+      return value;
+    }
+
+    return new Promise(function (resolve) {
+      resolve(value);
+    });
+  };
+
+  Promise.reject = function (value) {
+    return new Promise(function (resolve, reject) {
+      reject(value);
+    });
+  };
+
+  Promise.race = function (values) {
+    return new Promise(function (resolve, reject) {
+      for (var i = 0, len = values.length; i < len; i++) {
+        values[i].then(resolve, reject);
+      }
+    });
+  };
+
+  // Use polyfill for setImmediate for performance gains
+  Promise._immediateFn = (typeof setImmediate === 'function' && function (fn) { setImmediate(fn); }) ||
+    function (fn) {
+      setTimeoutFunc(fn, 0);
+    };
+
+  Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+    if (typeof console !== 'undefined' && console) {
+      console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
+    }
+  };
+
+  /**
+   * Set the immediate function to execute callbacks
+   * @param fn {function} Function to execute
+   * @deprecated
+   */
+  Promise._setImmediateFn = function _setImmediateFn(fn) {
+    Promise._immediateFn = fn;
+  };
+
+  /**
+   * Change the function to execute on unhandled rejection
+   * @param {function} fn Function to execute on unhandled rejection
+   * @deprecated
+   */
+  Promise._setUnhandledRejectionFn = function _setUnhandledRejectionFn(fn) {
+    Promise._unhandledRejectionFn = fn;
+  };
+  
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Promise;
+  } else if (!root.Promise) {
+    root.Promise = Promise;
+  }
+
+})(this);
+
+},{}],42:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8174,7 +8409,7 @@ var easingFunctions = {
 exports.default = easingFunctions;
 module.exports = exports['default'];
 
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8258,54 +8493,59 @@ var FX = function () {
     }, {
         key: 'animate',
         value: function animate(props) {
+            var _this = this;
+
             var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDuration;
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
-            var el = this.el;
-            var frame = Object.create(null);
-            var easingFunction = _easing2.default[easing];
-            var startTime = void 0,
-                currentTime = void 0,
-                startProps = void 0,
-                endProps = void 0;
-            var step = function step(timestamp) {
-                if (!startTime) {
-                    startTime = timestamp;
-                }
-                if (timestamp < startTime + duration) {
-                    currentTime = timestamp - startTime;
-                    var start = void 0,
-                        end = void 0,
-                        prop = void 0,
-                        i = void 0,
-                        len = void 0;
-                    for (prop in startProps) {
-                        start = startProps[prop];
-                        end = endProps[prop];
-                        if ((0, _util.isArray)(start)) {
-                            frame[prop] = [];
-                            for (i = 0, len = start.length; i < len; i++) {
-                                frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
-                            }
-                        } else {
-                            frame[prop] = easingFunction(currentTime, start, end - start, duration);
-                        }
+            return new Promise(function (resolve) {
+                var el = _this.el;
+                var frame = Object.create(null);
+                var easingFunction = _easing2.default[easing];
+                var startTime = void 0,
+                    currentTime = void 0,
+                    startProps = void 0,
+                    endProps = void 0;
+                var step = function step(timestamp) {
+                    if (!startTime) {
+                        startTime = timestamp;
                     }
-                    (0, _props.setProperties)(el, frame);
+                    if (timestamp < startTime + duration) {
+                        currentTime = timestamp - startTime;
+                        var start = void 0,
+                            end = void 0,
+                            prop = void 0,
+                            i = void 0,
+                            len = void 0;
+                        for (prop in startProps) {
+                            start = startProps[prop];
+                            end = endProps[prop];
+                            if ((0, _util.isArray)(start)) {
+                                frame[prop] = [];
+                                for (i = 0, len = start.length; i < len; i++) {
+                                    frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
+                                }
+                            } else {
+                                frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                            }
+                        }
+                        (0, _props.setProperties)(el, frame);
+                        requestAnimationFrame(step);
+                    } else {
+                        (0, _props.setProperties)(el, endProps);
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(function () {
+                    var _getProperties = (0, _props.getProperties)(el, props);
+
+                    var _getProperties2 = _slicedToArray(_getProperties, 2);
+
+                    startProps = _getProperties2[0];
+                    endProps = _getProperties2[1];
+
                     requestAnimationFrame(step);
-                } else {
-                    (0, _props.setProperties)(el, endProps);
-                }
-            };
-            requestAnimationFrame(function () {
-                var _getProperties = (0, _props.getProperties)(el, props);
-
-                var _getProperties2 = _slicedToArray(_getProperties, 2);
-
-                startProps = _getProperties2[0];
-                endProps = _getProperties2[1];
-
-                requestAnimationFrame(step);
+                });
             });
         }
     }]);
@@ -8328,7 +8568,7 @@ function fx(el) {
 }
 module.exports = exports['default'];
 
-},{"./easing":41,"./props":43,"./util":44}],43:[function(require,module,exports){
+},{"./easing":42,"./props":44,"./util":45}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8427,7 +8667,7 @@ function setProperties(el, props) {
     }
 }
 
-},{"./util":44}],44:[function(require,module,exports){
+},{"./util":45}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8523,8 +8763,12 @@ function parseColor(str) {
     }
 }
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
+
+var _promisePolyfill = require('promise-polyfill');
+
+var _promisePolyfill2 = _interopRequireDefault(_promisePolyfill);
 
 var _chai = require('chai');
 
@@ -8534,7 +8778,8 @@ var _fx2 = _interopRequireDefault(_fx);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* eslint-disable max-len */
+// Polyfill promises
+window.Promise = _promisePolyfill2.default; /* eslint-disable max-len */
 
 describe('fx', function () {
     it('should support providing a DOM element', function () {
@@ -8579,6 +8824,14 @@ describe('fx', function () {
             done();
         }, 1100);
     });
+
+    it('should support promises', function (done) {
+        var el = document.createElement('div');
+        (0, _fx2.default)(el).animate({ width: 100 }).then(function () {
+            (0, _chai.expect)(el.style.width).to.equal('100px');
+            done();
+        });
+    });
 });
 
-},{"../../src/fx":42,"chai":5}]},{},[45]);
+},{"../../src/fx":43,"chai":5,"promise-polyfill":41}]},{},[46]);
