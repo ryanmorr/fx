@@ -8815,6 +8815,26 @@ describe('fx', function () {
         document.body.removeChild(el);
     });
 
+    it('should support promises', function (done) {
+        var el = document.createElement('div');
+        var promise = (0, _fx2.default)(el).animate({ width: 100 });
+        promise.then(function () {
+            (0, _chai.expect)(promise.constructor).to.equal(_promisePolyfill2.default);
+            done();
+        });
+    });
+
+    it('should know if the element is currently animating', function (done) {
+        var el = document.createElement('div');
+        var anim = (0, _fx2.default)(el);
+        (0, _chai.expect)(anim.isAnimating()).to.equal(false);
+        anim.animate({ width: 100 }).then(function () {
+            (0, _chai.expect)(anim.isAnimating()).to.equal(false);
+            done();
+        });
+        (0, _chai.expect)(anim.isAnimating()).to.equal(true);
+    });
+
     it('should support animating numeric properties', function (done) {
         var el = document.createElement('div');
         (0, _fx2.default)(el).animate({
@@ -8841,25 +8861,6 @@ describe('fx', function () {
             (0, _chai.expect)(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
             done();
         }, 1100);
-    });
-
-    it('should support promises', function (done) {
-        var el = document.createElement('div');
-        (0, _fx2.default)(el).animate({ width: 100 }).then(function () {
-            (0, _chai.expect)(el.style.width).to.equal('100px');
-            done();
-        });
-    });
-
-    it('should know if the element is currently animating', function (done) {
-        var el = document.createElement('div');
-        var anim = (0, _fx2.default)(el);
-        (0, _chai.expect)(anim.isAnimating()).to.equal(false);
-        anim.animate({ width: 100 }).then(function () {
-            (0, _chai.expect)(anim.isAnimating()).to.equal(false);
-            done();
-        });
-        (0, _chai.expect)(anim.isAnimating()).to.equal(true);
     });
 });
 

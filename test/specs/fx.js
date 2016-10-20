@@ -23,6 +23,26 @@ describe('fx', () => {
         document.body.removeChild(el);
     });
 
+    it('should support promises', (done) => {
+        const el = document.createElement('div');
+        const promise = fx(el).animate({width: 100});
+        promise.then(() => {
+            expect(promise.constructor).to.equal(Promise);
+            done();
+        });
+    });
+
+    it('should know if the element is currently animating', (done) => {
+        const el = document.createElement('div');
+        const anim = fx(el);
+        expect(anim.isAnimating()).to.equal(false);
+        anim.animate({width: 100}).then(() => {
+            expect(anim.isAnimating()).to.equal(false);
+            done();
+        });
+        expect(anim.isAnimating()).to.equal(true);
+    });
+
     it('should support animating numeric properties', (done) => {
         const el = document.createElement('div');
         fx(el).animate({
@@ -49,24 +69,5 @@ describe('fx', () => {
             expect(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
             done();
         }, 1100);
-    });
-
-    it('should support promises', (done) => {
-        const el = document.createElement('div');
-        fx(el).animate({width: 100}).then(() => {
-            expect(el.style.width).to.equal('100px');
-            done();
-        });
-    });
-
-    it('should know if the element is currently animating', (done) => {
-        const el = document.createElement('div');
-        const anim = fx(el);
-        expect(anim.isAnimating()).to.equal(false);
-        anim.animate({width: 100}).then(() => {
-            expect(anim.isAnimating()).to.equal(false);
-            done();
-        });
-        expect(anim.isAnimating()).to.equal(true);
     });
 });
