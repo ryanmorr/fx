@@ -8150,26 +8150,6 @@ Library.prototype.test = function(obj, type) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Import dependencies
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
-
-
-exports.default = fx;
-
-var _props = require('./props');
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * Default animation options
- */
-var defaultDuration = 700;
-var defaultEasing = 'ease-out';
-
 /**
  * Transitional easing functions
  */
@@ -8187,6 +8167,46 @@ var easingFunctions = {
         return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
     }
 };
+
+/**
+ * Export easing functions
+ */
+exports.default = easingFunctions;
+module.exports = exports['default'];
+
+},{}],42:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Import dependencies
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+
+exports.default = fx;
+
+var _easing = require('./easing');
+
+var _easing2 = _interopRequireDefault(_easing);
+
+var _props = require('./props');
+
+var _util = require('./util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Default animation options
+ */
+var defaultDuration = 700;
+var defaultEasing = 'ease-out';
 
 /**
  * Animation class
@@ -8243,7 +8263,7 @@ var FX = function () {
 
             this.duration = duration;
             this.frame = Object.create(null);
-            this.easingFunction = easingFunctions[easing];
+            this.easingFunction = _easing2.default[easing];
 
             var _getProperties = (0, _props.getProperties)(this.el, props);
 
@@ -8285,7 +8305,16 @@ var FX = function () {
                 for (prop in startProps) {
                     start = startProps[prop];
                     end = endProps[prop];
-                    frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                    if ((0, _util.isArray)(start)) {
+                        if (!(0, _util.isArray)(frame[prop])) {
+                            frame[prop] = [];
+                        }
+                        for (var i = 0, len = start.length; i < len; i++) {
+                            frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
+                        }
+                    } else {
+                        frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                    }
                 }
                 this.currentTime = currentTime;
                 (0, _props.setProperties)(this.el, frame);
@@ -8314,7 +8343,7 @@ function fx(el) {
 }
 module.exports = exports['default'];
 
-},{"./props":42}],42:[function(require,module,exports){
+},{"./easing":41,"./props":43,"./util":44}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8330,6 +8359,12 @@ exports.getProperties = getProperties;
 exports.setProperties = setProperties;
 
 var _util = require('./util');
+
+/**
+ * Common variables
+ */
+var has = {}.hasOwnProperty;
+var floor = Math.floor;
 
 /**
  * Get the computed value of a style
@@ -8362,40 +8397,52 @@ function getProperties(el, props) {
         to = void 0,
         from = void 0;
     for (prop in props) {
-        value = props[prop];
+        if (has.call(props, prop)) {
+            value = props[prop];
 
-        var _ref = (0, _util.isArray)(value) ? value : [null, value];
+            var _ref = (0, _util.isArray)(value) ? value : [null, value];
 
-        var _ref2 = _slicedToArray(_ref, 2);
+            var _ref2 = _slicedToArray(_ref, 2);
 
-        from = _ref2[0];
-        to = _ref2[1];
+            from = _ref2[0];
+            to = _ref2[1];
 
-        from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
-        startProps[prop] = from;
-        endProps[prop] = to;
+            if ((0, _util.includes)(prop, 'color')) {
+                from = from == null ? getStyle(el, prop) : from;
+                startProps[prop] = (0, _util.parseColor)(from);
+                endProps[prop] = (0, _util.parseColor)(to);
+            } else {
+                from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
+                startProps[prop] = from;
+                endProps[prop] = to;
+            }
+        }
     }
     return [startProps, endProps];
 }
 
 /**
- * Set the value of each property of
- * an animation for the current frame
+ * Set multiple style properties for
+ * an element
  *
  * @param {Element} el
- * @param {Object} frame
+ * @param {Object} props
  * @api private
  */
-function setProperties(el, frame) {
+function setProperties(el, props) {
     var prop = void 0,
         value = void 0;
-    for (prop in frame) {
-        value = frame[prop];
-        el.style[prop] = value + 'px';
+    for (prop in props) {
+        value = props[prop];
+        if ((0, _util.includes)(prop, 'color')) {
+            el.style[prop] = 'rgb(' + floor(value[0]) + ', ' + floor(value[1]) + ', ' + floor(value[2]) + ')';
+        } else {
+            el.style[prop] = value + 'px';
+        }
     }
 }
 
-},{"./util":43}],43:[function(require,module,exports){
+},{"./util":44}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -8403,10 +8450,16 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isArray = isArray;
 exports.now = now;
+exports.includes = includes;
+exports.parseColor = parseColor;
 /**
  * Common variables
  */
 var toString = {}.toString;
+var hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
+var hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
+var rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
+var colorCache = Object.create(null);
 
 /**
  * Is the object an array?
@@ -8435,7 +8488,57 @@ function now() {
     return Date.now();
 }
 
-},{}],44:[function(require,module,exports){
+/**
+ * Does the string contain the
+ * provided string
+ *
+ * @param {String} str
+ * @param {String} searchStr
+ * @return {Boolean}
+ * @api private
+ */
+function includes(str, searchStr) {
+    str = str.toLowerCase();
+    if (str.includes) {
+        return str.includes(searchStr);
+    }
+    return str.indexOf(searchStr) !== -1;
+}
+
+/**
+ * Parse a CSS color hex and rgb value
+ * to extract the numberic codes
+ *
+ * @param {String} str
+ * @return {Array}
+ * @api private
+ */
+function parseColor(str) {
+    if (str in colorCache) {
+        return colorCache[str];
+    }
+    var color = str.match(hex6Re),
+        value = void 0;
+    if (color && color.length === 4) {
+        value = [parseInt(color[1], 16), parseInt(color[2], 16), parseInt(color[3], 16)];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(rgbRe);
+    if (color && color.length === 4) {
+        value = [parseInt(color[1], 10), parseInt(color[2], 10), parseInt(color[3], 10)];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(hex3Re);
+    if (color && color.length === 4) {
+        value = [parseInt(color[1] + color[1], 16), parseInt(color[2] + color[2], 16), parseInt(color[3] + color[3], 16)];
+        colorCache[str] = value;
+        return value;
+    }
+}
+
+},{}],45:[function(require,module,exports){
 'use strict';
 
 var _chai = require('chai');
@@ -8464,16 +8567,33 @@ describe('fx', function () {
         document.body.removeChild(el);
     });
 
-    it('should support animating properties', function (done) {
+    it('should support animating numeric properties', function (done) {
         var el = document.createElement('div');
-        var anim = (0, _fx2.default)(el);
-        anim.animate({ width: 100, height: 100 }, 1000);
+        (0, _fx2.default)(el).animate({
+            width: 100,
+            height: 100
+        }, 1000);
         setTimeout(function () {
             (0, _chai.expect)(el.style.width).to.equal('100px');
             (0, _chai.expect)(el.style.height).to.equal('100px');
             done();
         }, 1100);
     });
+
+    it('should support animating colors', function (done) {
+        var el = document.createElement('div');
+        (0, _fx2.default)(el).animate({
+            color: 'rgb(0, 0, 255)',
+            backgroundColor: '#00FFFF',
+            borderColor: '#01F'
+        }, 1000);
+        setTimeout(function () {
+            (0, _chai.expect)(el.style.color).to.equal('rgb(0, 0, 255)');
+            (0, _chai.expect)(el.style.borderColor).to.equal('rgb(0, 17, 255)');
+            (0, _chai.expect)(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
+            done();
+        }, 1100);
+    });
 });
 
-},{"../../src/fx":41,"chai":5}]},{},[44]);
+},{"../../src/fx":42,"chai":5}]},{},[45]);

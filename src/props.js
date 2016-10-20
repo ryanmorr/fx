@@ -1,7 +1,13 @@
 /**
  * Import dependencies
  */
-import { isArray } from './util';
+import { isArray, includes, parseColor } from './util';
+
+/**
+ * Common variables
+ */
+const has = {}.hasOwnProperty;
+const floor = Math.floor;
 
 /**
  * Get the computed value of a style
@@ -31,27 +37,39 @@ export function getProperties(el, props) {
     const endProps = Object.create(null);
     let prop, value, to, from;
     for (prop in props) {
-        value = props[prop];
-        [from, to] = isArray(value) ? value : [null, value];
-        from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
-        startProps[prop] = from;
-        endProps[prop] = to;
+        if (has.call(props, prop)) {
+            value = props[prop];
+            [from, to] = isArray(value) ? value : [null, value];
+            if (includes(prop, 'color')) {
+                from = from == null ? getStyle(el, prop) : from;
+                startProps[prop] = parseColor(from);
+                endProps[prop] = parseColor(to);
+            } else {
+                from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
+                startProps[prop] = from;
+                endProps[prop] = to;
+            }
+        }
     }
     return [startProps, endProps];
 }
 
 /**
- * Set the value of each property of
- * an animation for the current frame
+ * Set multiple style properties for
+ * an element
  *
  * @param {Element} el
- * @param {Object} frame
+ * @param {Object} props
  * @api private
  */
-export function setProperties(el, frame) {
+export function setProperties(el, props) {
     let prop, value;
-    for (prop in frame) {
-        value = frame[prop];
-        el.style[prop] = value + 'px';
+    for (prop in props) {
+        value = props[prop];
+        if (includes(prop, 'color')) {
+            el.style[prop] = `rgb(${floor(value[0])}, ${floor(value[1])}, ${floor(value[2])})`;
+        } else {
+            el.style[prop] = value + 'px';
+        }
     }
 }

@@ -2,16 +2,26 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Basic FX Example</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>FX Basic Example</title>
     <script src="../dist/fx.js"></script>
 </head>
 <body>
 
+<style>
+#fx-element {
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
 <div id="fx-element"></div>
 
 <script>
-fx('#fx-element').animate({width: 100, height: 100});
+fx('#fx-element').animate({
+    width: 250, 
+    height: 250
+});
 </script>
 
 </body>

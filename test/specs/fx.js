@@ -19,13 +19,30 @@ describe('fx', () => {
         document.body.removeChild(el);
     });
 
-    it('should support animating properties', (done) => {
+    it('should support animating numeric properties', (done) => {
         const el = document.createElement('div');
-        const anim = fx(el);
-        anim.animate({width: 100, height: 100}, 1000);
+        fx(el).animate({
+            width: 100,
+            height: 100
+        }, 1000);
         setTimeout(() => {
             expect(el.style.width).to.equal('100px');
             expect(el.style.height).to.equal('100px');
+            done();
+        }, 1100);
+    });
+
+    it('should support animating colors', (done) => {
+        const el = document.createElement('div');
+        fx(el).animate({
+            color: 'rgb(0, 0, 255)',
+            backgroundColor: '#00FFFF',
+            borderColor: '#01F'
+        }, 1000);
+        setTimeout(() => {
+            expect(el.style.color).to.equal('rgb(0, 0, 255)');
+            expect(el.style.borderColor).to.equal('rgb(0, 17, 255)');
+            expect(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
             done();
         }, 1100);
     });

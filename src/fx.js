@@ -3,6 +3,7 @@
  */
 import easingFunctions from './easing';
 import { getProperties, setProperties } from './props';
+import { isArray } from './util';
 
 /**
  * Default animation options
@@ -81,7 +82,26 @@ class FX {
             for (prop in startProps) {
                 start = startProps[prop];
                 end = endProps[prop];
-                frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                if (isArray(start)) {
+                    if (!isArray(frame[prop])) {
+                        frame[prop] = [];
+                    }
+                    for (let i = 0, len = start.length; i < len; i++) {
+                        frame[prop][i] = easingFunction(
+                            currentTime,
+                            start[i],
+                            end[i] - start[i],
+                            duration
+                        );
+                    }
+                } else {
+                    frame[prop] = easingFunction(
+                        currentTime,
+                        start,
+                        end - start,
+                        duration
+                    );
+                }
             }
             this.currentTime = currentTime;
             setProperties(this.el, frame);
