@@ -70,4 +70,17 @@ describe('fx', () => {
             done();
         }, 1100);
     });
+
+    it('should support scroll animations', (done) => {
+        const el = document.createElement('div');
+        el.style.cssText = 'height: 100px; overflow: scroll';
+        el.innerHTML = '<div style="height: 1000px"></div>';
+        document.body.appendChild(el);
+        fx(el).animate({scrollTop: 200}, 1000);
+        setTimeout(() => {
+            expect(el.scrollTop).to.equal(200);
+            document.body.removeChild(el);
+            done();
+        }, 1100);
+    });
 });

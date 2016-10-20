@@ -44,6 +44,10 @@ export function getProperties(el, props) {
                 from = from == null ? getStyle(el, prop) : from;
                 startProps[prop] = parseColor(from);
                 endProps[prop] = parseColor(to);
+            } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
+                from = from == null ? el[prop] : from;
+                startProps[prop] = from;
+                endProps[prop] = to;
             } else {
                 from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
                 startProps[prop] = from;
@@ -68,6 +72,8 @@ export function setProperties(el, props) {
         value = props[prop];
         if (includes(prop, 'color')) {
             el.style[prop] = `rgb(${floor(value[0])}, ${floor(value[1])}, ${floor(value[2])})`;
+        } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
+            el[prop] = value;
         } else {
             el.style[prop] = value + 'px';
         }

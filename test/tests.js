@@ -8654,6 +8654,10 @@ function getProperties(el, props) {
                 from = from == null ? getStyle(el, prop) : from;
                 startProps[prop] = (0, _util.parseColor)(from);
                 endProps[prop] = (0, _util.parseColor)(to);
+            } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
+                from = from == null ? el[prop] : from;
+                startProps[prop] = from;
+                endProps[prop] = to;
             } else {
                 from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
                 startProps[prop] = from;
@@ -8679,6 +8683,8 @@ function setProperties(el, props) {
         value = props[prop];
         if ((0, _util.includes)(prop, 'color')) {
             el.style[prop] = 'rgb(' + floor(value[0]) + ', ' + floor(value[1]) + ', ' + floor(value[2]) + ')';
+        } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
+            el[prop] = value;
         } else {
             el.style[prop] = value + 'px';
         }
@@ -8859,6 +8865,19 @@ describe('fx', function () {
             (0, _chai.expect)(el.style.color).to.equal('rgb(0, 0, 255)');
             (0, _chai.expect)(el.style.borderColor).to.equal('rgb(0, 17, 255)');
             (0, _chai.expect)(el.style.backgroundColor).to.equal('rgb(0, 255, 255)');
+            done();
+        }, 1100);
+    });
+
+    it('should support scroll animations', function (done) {
+        var el = document.createElement('div');
+        el.style.cssText = 'height: 100px; overflow: scroll';
+        el.innerHTML = '<div style="height: 1000px"></div>';
+        document.body.appendChild(el);
+        (0, _fx2.default)(el).animate({ scrollTop: 200 }, 1000);
+        setTimeout(function () {
+            (0, _chai.expect)(el.scrollTop).to.equal(200);
+            document.body.removeChild(el);
             done();
         }, 1100);
     });
