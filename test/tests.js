@@ -8261,67 +8261,52 @@ var FX = function () {
             var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDuration;
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
-            this.duration = duration;
-            this.frame = Object.create(null);
-            this.easingFunction = _easing2.default[easing];
-
-            var _getProperties = (0, _props.getProperties)(this.el, props);
-
-            var _getProperties2 = _slicedToArray(_getProperties, 2);
-
-            var startProps = _getProperties2[0];
-            var endProps = _getProperties2[1];
-
-            this.startProps = startProps;
-            this.endProps = endProps;
-            requestAnimationFrame(this.step.bind(this));
-        }
-
-        /**
-         * Advance the properties of the
-         * animation by 1 frame
-         *
-         * @param {Number} timestamp
-         * @api private
-         */
-
-    }, {
-        key: 'step',
-        value: function step(timestamp) {
-            if (!this.startTime) {
-                this.startTime = timestamp;
-            }
-            var startTime = this.startTime,
-                duration = this.duration;
-            if (timestamp < startTime + duration) {
-                var prop = void 0,
-                    start = void 0,
-                    end = void 0;
-                var currentTime = timestamp - startTime,
-                    frame = this.frame,
-                    startProps = this.startProps,
-                    endProps = this.endProps,
-                    easingFunction = this.easingFunction;
-                for (prop in startProps) {
-                    start = startProps[prop];
-                    end = endProps[prop];
-                    if ((0, _util.isArray)(start)) {
-                        if (!(0, _util.isArray)(frame[prop])) {
-                            frame[prop] = [];
-                        }
-                        for (var i = 0, len = start.length; i < len; i++) {
-                            frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
-                        }
-                    } else {
-                        frame[prop] = easingFunction(currentTime, start, end - start, duration);
-                    }
+            var el = this.el;
+            var frame = Object.create(null);
+            var easingFunction = _easing2.default[easing];
+            var startTime = void 0,
+                currentTime = void 0,
+                startProps = void 0,
+                endProps = void 0;
+            var step = function step(timestamp) {
+                if (!startTime) {
+                    startTime = timestamp;
                 }
-                this.currentTime = currentTime;
-                (0, _props.setProperties)(this.el, frame);
-                requestAnimationFrame(this.step.bind(this));
-            } else {
-                (0, _props.setProperties)(this.el, this.endProps);
-            }
+                if (timestamp < startTime + duration) {
+                    currentTime = timestamp - startTime;
+                    var start = void 0,
+                        end = void 0,
+                        prop = void 0,
+                        i = void 0,
+                        len = void 0;
+                    for (prop in startProps) {
+                        start = startProps[prop];
+                        end = endProps[prop];
+                        if ((0, _util.isArray)(start)) {
+                            frame[prop] = [];
+                            for (i = 0, len = start.length; i < len; i++) {
+                                frame[prop][i] = easingFunction(currentTime, start[i], end[i] - start[i], duration);
+                            }
+                        } else {
+                            frame[prop] = easingFunction(currentTime, start, end - start, duration);
+                        }
+                    }
+                    (0, _props.setProperties)(el, frame);
+                    requestAnimationFrame(step);
+                } else {
+                    (0, _props.setProperties)(el, endProps);
+                }
+            };
+            requestAnimationFrame(function () {
+                var _getProperties = (0, _props.getProperties)(el, props);
+
+                var _getProperties2 = _slicedToArray(_getProperties, 2);
+
+                startProps = _getProperties2[0];
+                endProps = _getProperties2[1];
+
+                requestAnimationFrame(step);
+            });
         }
     }]);
 

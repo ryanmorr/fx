@@ -51,64 +51,49 @@ class FX {
      * @api public
      */
     animate(props, duration = defaultDuration, easing = defaultEasing) {
-        this.duration = duration;
-        this.frame = Object.create(null);
-        this.easingFunction = easingFunctions[easing];
-        const [startProps, endProps] = getProperties(this.el, props);
-        this.startProps = startProps;
-        this.endProps = endProps;
-        requestAnimationFrame(this.step.bind(this));
-    }
-
-    /**
-     * Advance the properties of the
-     * animation by 1 frame
-     *
-     * @param {Number} timestamp
-     * @api private
-     */
-    step(timestamp) {
-        if (!this.startTime) {
-            this.startTime = timestamp;
-        }
-        const startTime = this.startTime, duration = this.duration;
-        if (timestamp < startTime + duration) {
-            let prop, start, end;
-            const currentTime = timestamp - startTime,
-            frame = this.frame,
-            startProps = this.startProps,
-            endProps = this.endProps,
-            easingFunction = this.easingFunction;
-            for (prop in startProps) {
-                start = startProps[prop];
-                end = endProps[prop];
-                if (isArray(start)) {
-                    if (!isArray(frame[prop])) {
+        const el = this.el;
+        const frame = Object.create(null);
+        const easingFunction = easingFunctions[easing];
+        let startTime, currentTime, startProps, endProps;
+        const step = (timestamp) => {
+            if (!startTime) {
+                startTime = timestamp;
+            }
+            if (timestamp < startTime + duration) {
+                currentTime = timestamp - startTime;
+                let start, end, prop, i, len;
+                for (prop in startProps) {
+                    start = startProps[prop];
+                    end = endProps[prop];
+                    if (isArray(start)) {
                         frame[prop] = [];
-                    }
-                    for (let i = 0, len = start.length; i < len; i++) {
-                        frame[prop][i] = easingFunction(
+                        for (i = 0, len = start.length; i < len; i++) {
+                            frame[prop][i] = easingFunction(
+                                currentTime,
+                                start[i],
+                                end[i] - start[i],
+                                duration
+                            );
+                        }
+                    } else {
+                        frame[prop] = easingFunction(
                             currentTime,
-                            start[i],
-                            end[i] - start[i],
+                            start,
+                            end - start,
                             duration
                         );
                     }
-                } else {
-                    frame[prop] = easingFunction(
-                        currentTime,
-                        start,
-                        end - start,
-                        duration
-                    );
                 }
+                setProperties(el, frame);
+                requestAnimationFrame(step);
+            } else {
+                setProperties(el, endProps);
             }
-            this.currentTime = currentTime;
-            setProperties(this.el, frame);
-            requestAnimationFrame(this.step.bind(this));
-        } else {
-            setProperties(this.el, this.endProps);
-        }
+        };
+        requestAnimationFrame(() => {
+            [startProps, endProps] = getProperties(el, props);
+            requestAnimationFrame(step);
+        });
     }
 }
 
