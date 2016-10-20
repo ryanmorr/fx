@@ -58,4 +58,15 @@ describe('fx', () => {
             done();
         });
     });
+
+    it('should know if the element is currently animating', (done) => {
+        const el = document.createElement('div');
+        const anim = fx(el);
+        expect(anim.isAnimating()).to.equal(false);
+        anim.animate({width: 100}).then(() => {
+            expect(anim.isAnimating()).to.equal(false);
+            done();
+        });
+        expect(anim.isAnimating()).to.equal(true);
+    });
 });

@@ -30,6 +30,7 @@ class FX {
      */
     constructor(el) {
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
+        this.animating = false;
     }
 
     /**
@@ -43,14 +44,27 @@ class FX {
     }
 
     /**
+     * Is the animation element currently
+     * animating
+     *
+     * @return {Boolean}
+     * @api public
+     */
+    isAnimating() {
+        return this.animating;
+    }
+
+    /**
      * Animate the element
      *
      * @param {Object} props
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
+     * @param {Promise}
      * @api public
      */
     animate(props, duration = defaultDuration, easing = defaultEasing) {
+        this.animating = true;
         return new Promise((resolve) => {
             const el = this.el;
             const frame = Object.create(null);
@@ -89,6 +103,7 @@ class FX {
                     requestAnimationFrame(step);
                 } else {
                     setProperties(el, endProps);
+                    this.animating = false;
                     resolve();
                 }
             };

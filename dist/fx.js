@@ -85,6 +85,7 @@ var FX = function () {
         _classCallCheck(this, FX);
 
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
+        this.animating = false;
     }
 
     /**
@@ -102,11 +103,26 @@ var FX = function () {
         }
 
         /**
+         * Is the animation element currently
+         * animating
+         *
+         * @return {Boolean}
+         * @api public
+         */
+
+    }, {
+        key: 'isAnimating',
+        value: function isAnimating() {
+            return this.animating;
+        }
+
+        /**
          * Animate the element
          *
          * @param {Object} props
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
+         * @param {Promise}
          * @api public
          */
 
@@ -118,6 +134,7 @@ var FX = function () {
             var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDuration;
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
+            this.animating = true;
             return new Promise(function (resolve) {
                 var el = _this.el;
                 var frame = Object.create(null);
@@ -153,6 +170,7 @@ var FX = function () {
                         requestAnimationFrame(step);
                     } else {
                         (0, _props.setProperties)(el, endProps);
+                        _this.animating = false;
                         resolve();
                     }
                 };
