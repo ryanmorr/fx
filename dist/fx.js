@@ -85,6 +85,7 @@ var FX = function () {
         _classCallCheck(this, FX);
 
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
+        this.events = Object.create(null);
         this.animating = false;
     }
 
@@ -135,6 +136,7 @@ var FX = function () {
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
             this.animating = true;
+            this.emit('start');
             return new Promise(function (resolve) {
                 var el = _this.el;
                 var frame = Object.create(null);
@@ -143,7 +145,7 @@ var FX = function () {
                     currentTime = void 0,
                     startProps = void 0,
                     endProps = void 0;
-                var step = function step(timestamp) {
+                var tick = function tick(timestamp) {
                     if (!startTime) {
                         startTime = timestamp;
                     }
@@ -167,11 +169,13 @@ var FX = function () {
                             }
                         }
                         (0, _props.setProperties)(el, frame);
-                        requestAnimationFrame(step);
+                        requestAnimationFrame(tick);
+                        _this.emit('tick', Math.round(currentTime / duration * 100), frame);
                     } else {
                         (0, _props.setProperties)(el, endProps);
                         _this.animating = false;
                         resolve();
+                        _this.emit('done');
                     }
                 };
                 requestAnimationFrame(function () {
@@ -182,9 +186,50 @@ var FX = function () {
                     startProps = _getProperties2[0];
                     endProps = _getProperties2[1];
 
-                    requestAnimationFrame(step);
+                    requestAnimationFrame(tick);
                 });
             });
+        }
+
+        /**
+         * Add a callback function to a
+         * custom event
+         *
+         * @param {String} name
+         * @param {Function} fn
+         * @api public
+         */
+
+    }, {
+        key: 'on',
+        value: function on(name, fn) {
+            if (!(name in this.events)) {
+                this.events[name] = [];
+            }
+            this.events[name].push(fn);
+        }
+
+        /**
+         * Emit a custom event
+         *
+         * @param {String} name
+         * @param {...*} args
+         * @api private
+         */
+
+    }, {
+        key: 'emit',
+        value: function emit(name) {
+            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                args[_key - 1] = arguments[_key];
+            }
+
+            var callbacks = this.events[name];
+            if (callbacks && callbacks.length) {
+                callbacks.forEach(function (callback) {
+                    return callback.apply(undefined, args);
+                });
+            }
         }
     }]);
 

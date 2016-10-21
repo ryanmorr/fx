@@ -30,6 +30,7 @@ class FX {
      */
     constructor(el) {
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
+        this.events = Object.create(null);
         this.animating = false;
     }
 
@@ -65,12 +66,13 @@ class FX {
      */
     animate(props, duration = defaultDuration, easing = defaultEasing) {
         this.animating = true;
+        this.emit('start');
         return new Promise((resolve) => {
             const el = this.el;
             const frame = Object.create(null);
             const easingFunction = easingFunctions[easing];
             let startTime, currentTime, startProps, endProps;
-            const step = (timestamp) => {
+            const tick = (timestamp) => {
                 if (!startTime) {
                     startTime = timestamp;
                 }
@@ -100,18 +102,49 @@ class FX {
                         }
                     }
                     setProperties(el, frame);
-                    requestAnimationFrame(step);
+                    requestAnimationFrame(tick);
+                    this.emit('tick', Math.round((currentTime / duration) * 100), frame);
                 } else {
                     setProperties(el, endProps);
                     this.animating = false;
                     resolve();
+                    this.emit('done');
                 }
             };
             requestAnimationFrame(() => {
                 [startProps, endProps] = getProperties(el, props);
-                requestAnimationFrame(step);
+                requestAnimationFrame(tick);
             });
         });
+    }
+
+    /**
+     * Add a callback function to a
+     * custom event
+     *
+     * @param {String} name
+     * @param {Function} fn
+     * @api public
+     */
+    on(name, fn) {
+        if (!(name in this.events)) {
+            this.events[name] = [];
+        }
+        this.events[name].push(fn);
+    }
+
+    /**
+     * Emit a custom event
+     *
+     * @param {String} name
+     * @param {...*} args
+     * @api private
+     */
+    emit(name, ...args) {
+        const callbacks = this.events[name];
+        if (callbacks && callbacks.length) {
+            callbacks.forEach((callback) => callback(...args));
+        }
     }
 }
 
