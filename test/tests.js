@@ -8743,7 +8743,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.isArray = isArray;
-exports.now = now;
 exports.includes = includes;
 exports.parseColor = parseColor;
 /**
@@ -8767,19 +8766,6 @@ function isArray(obj) {
         return Array.isArray(obj);
     }
     return toString.call(obj) === '[object Array]';
-}
-
-/**
- * Get a timestamp
- *
- * @return {Number}
- * @api private
- */
-function now() {
-    if ('performance' in window) {
-        return window.performance.now() + window.performance.timing.navigationStart;
-    }
-    return Date.now();
 }
 
 /**

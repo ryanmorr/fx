@@ -22,19 +22,6 @@ export function isArray(obj) {
 }
 
 /**
- * Get a timestamp
- *
- * @return {Number}
- * @api private
- */
-export function now() {
-    if ('performance' in window) {
-        return window.performance.now() + window.performance.timing.navigationStart;
-    }
-    return Date.now();
-}
-
-/**
  * Does the string contain the
  * provided string
  *
