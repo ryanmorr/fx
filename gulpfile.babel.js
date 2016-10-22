@@ -14,43 +14,41 @@ import buffer from 'vinyl-buffer';
 const banner = '/*! ${pkg.name} v${pkg.version} | ${pkg.homepage} */\n';
 
 const config = {
-    src: {
-        files: './src/**/*.js',
-        entryFile: './src/fx.js',
-        outputFile: 'fx.js',
-        outputDir: './dist/'
-    }
+    files: './src/**/*.js',
+    entryFile: './src/fx.js',
+    outputFile: 'fx.js',
+    outputDir: './dist/'
 };
 
 gulp.task('clean', () => {
-    return del.sync([config.src.outputDir]);
+    return del.sync([config.outputDir]);
 });
 
 gulp.task('build', ['clean'], () => {
-    return browserify(config.src.entryFile, {debug: true, standalone: pkg.name})
+    return browserify(config.entryFile, {debug: true, standalone: pkg.name})
         .transform(babelify)
         .bundle()
-        .pipe(source(config.src.outputFile))
+        .pipe(source(config.outputFile))
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(header(banner, {pkg}))
-        .pipe(gulp.dest(config.src.outputDir))
+        .pipe(gulp.dest(config.outputDir))
         .pipe(uglify())
         .pipe(rename({suffix: '.min'}))
         .pipe(header(banner, {pkg}))
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(config.src.outputDir));
+        .pipe(gulp.dest(config.outputDir));
 });
 
 gulp.task('lint', () => {
-    return gulp.src(['./gulpfile.babel.js', config.src.files, config.test.specs])
+    return gulp.src(['./gulpfile.babel.js', config.files])
         .pipe(eslint())
         .pipe(eslint.format())
         .pipe(eslint.failAfterError());
 });
 
 gulp.task('watch', () => {
-    gulp.watch(['./gulpfile.babel.js', config.src.files, config.test.specs], ['lint', 'test']);
+    gulp.watch(['./gulpfile.babel.js', config.files], ['lint', 'test']);
 });
 
 gulp.task('default', [
