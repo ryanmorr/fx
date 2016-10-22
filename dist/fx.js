@@ -332,7 +332,6 @@ var _util = require('./util');
  * Common variables
  */
 var has = {}.hasOwnProperty;
-var floor = Math.floor;
 
 /**
  * Get the computed value of a style
@@ -406,12 +405,20 @@ function setProperties(el, props) {
         value = void 0;
     for (prop in props) {
         value = props[prop];
-        if ((0, _util.includes)(prop, 'color')) {
-            el.style[prop] = 'rgb(' + floor(value[0]) + ', ' + floor(value[1]) + ', ' + floor(value[2]) + ')';
-        } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
-            el[prop] = value;
-        } else {
-            el.style[prop] = value + 'px';
+        switch (prop) {
+            case 'opacity':
+                el.style.opacity = value;
+                break;
+            case 'scrollTop':
+            case 'scrollLeft':
+                el[prop] = value;
+                break;
+            default:
+                if ((0, _util.includes)(prop, 'color')) {
+                    el.style[prop] = 'rgb(\n                        ' + Math.floor(value[0]) + ', \n                        ' + Math.floor(value[1]) + ', \n                        ' + Math.floor(value[2]) + '\n                    )';
+                } else {
+                    el.style[prop] = value + 'px';
+                }
         }
     }
 }

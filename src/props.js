@@ -7,7 +7,6 @@ import { isArray, includes, parseColor } from './util';
  * Common variables
  */
 const has = {}.hasOwnProperty;
-const floor = Math.floor;
 
 /**
  * Get the computed value of a style
@@ -70,12 +69,24 @@ export function setProperties(el, props) {
     let prop, value;
     for (prop in props) {
         value = props[prop];
-        if (includes(prop, 'color')) {
-            el.style[prop] = `rgb(${floor(value[0])}, ${floor(value[1])}, ${floor(value[2])})`;
-        } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
-            el[prop] = value;
-        } else {
-            el.style[prop] = value + 'px';
+        switch (prop) {
+            case 'opacity':
+                el.style.opacity = value;
+                break;
+            case 'scrollTop':
+            case 'scrollLeft':
+                el[prop] = value;
+                break;
+            default:
+                if (includes(prop, 'color')) {
+                    el.style[prop] = `rgb(
+                        ${Math.floor(value[0])}, 
+                        ${Math.floor(value[1])}, 
+                        ${Math.floor(value[2])}
+                    )`;
+                } else {
+                    el.style[prop] = value + 'px';
+                }
         }
     }
 }
