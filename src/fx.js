@@ -1,6 +1,7 @@
 /**
  * Import dependencies
  */
+import Queue from './queue';
 import easingFunctions from './easing';
 import { getProperties, setProperties } from './props';
 import { isArray } from './util';
@@ -31,6 +32,7 @@ class FX {
     constructor(el) {
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
         this.events = Object.create(null);
+        this.queue = new Queue();
         this.animating = false;
     }
 
@@ -56,18 +58,42 @@ class FX {
     }
 
     /**
+     * Called when an animation is compeleted
+     *
+     * @api private
+     */
+    complete() {
+        if (this.isAnimating()) {
+            this.animating = false;
+            this.resolve();
+            this.emit('done');
+            this.promise = this.resolve = null;
+            if (!this.queue.isEmpty()) {
+                this.animate.apply(this, this.queue.dequeue());
+            }
+        }
+    }
+
+    /**
      * Animate the element
      *
      * @param {Object} props
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
      * @param {Promise}
+     * @return {FX}
      * @api public
      */
-    animate(props, duration = defaultDuration, easing = defaultEasing) {
+    animate(props, duration = defaultDuration, easing = defaultEasing, ...callbacks) {
+        if (this.isAnimating()) {
+            this.queue.enqueue([props, duration, easing, ...callbacks]);
+            return this;
+        }
         this.animating = true;
         this.emit('start');
-        return new Promise((resolve) => {
+        this.promise = new Promise((resolve) => {
+            this.resolve = resolve;
             const el = this.el;
             const frame = Object.create(null);
             const easingFunction = easingFunctions[easing];
@@ -106,9 +132,7 @@ class FX {
                     this.emit('tick', Math.round((currentTime / duration) * 100), frame);
                 } else {
                     setProperties(el, endProps);
-                    this.animating = false;
-                    resolve();
-                    this.emit('done');
+                    this.complete();
                 }
             };
             requestAnimationFrame(() => {
@@ -116,6 +140,25 @@ class FX {
                 requestAnimationFrame(tick);
             });
         });
+        callbacks.forEach((fn) => this.promise.then(fn));
+        return this;
+    }
+
+    /**
+     * Add a callback function for when
+     * the current animation is completed
+     *
+     * @param {Function} fn
+     * @return {FX}
+     * @api public
+     */
+    then(fn) {
+        if (!this.queue.isEmpty()) {
+            this.queue.getLast().push(fn);
+        } else if (this.promise) {
+            this.promise.then(fn);
+        }
+        return this;
     }
 
     /**
@@ -124,6 +167,7 @@ class FX {
      *
      * @param {String} name
      * @param {Function} fn
+     * @return {FX}
      * @api public
      */
     on(name, fn) {
@@ -131,6 +175,7 @@ class FX {
             this.events[name] = [];
         }
         this.events[name].push(fn);
+        return this;
     }
 
     /**

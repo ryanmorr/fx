@@ -45,6 +45,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 exports.default = fx;
 
+var _queue = require('./queue');
+
+var _queue2 = _interopRequireDefault(_queue);
+
 var _easing = require('./easing');
 
 var _easing2 = _interopRequireDefault(_easing);
@@ -86,6 +90,7 @@ var FX = function () {
 
         this.el = typeof el === 'string' ? document.querySelector(el) : el;
         this.events = Object.create(null);
+        this.queue = new _queue2.default();
         this.animating = false;
     }
 
@@ -118,12 +123,34 @@ var FX = function () {
         }
 
         /**
+         * Called when an animation is compeleted
+         *
+         * @api private
+         */
+
+    }, {
+        key: 'complete',
+        value: function complete() {
+            if (this.isAnimating()) {
+                this.animating = false;
+                this.resolve();
+                this.emit('done');
+                this.promise = this.resolve = null;
+                if (!this.queue.isEmpty()) {
+                    this.animate.apply(this, this.queue.dequeue());
+                }
+            }
+        }
+
+        /**
          * Animate the element
          *
          * @param {Object} props
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
          * @param {Promise}
+         * @return {FX}
          * @api public
          */
 
@@ -135,9 +162,18 @@ var FX = function () {
             var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultDuration;
             var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultEasing;
 
+            for (var _len = arguments.length, callbacks = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+                callbacks[_key - 3] = arguments[_key];
+            }
+
+            if (this.isAnimating()) {
+                this.queue.enqueue([props, duration, easing].concat(callbacks));
+                return this;
+            }
             this.animating = true;
             this.emit('start');
-            return new Promise(function (resolve) {
+            this.promise = new Promise(function (resolve) {
+                _this.resolve = resolve;
                 var el = _this.el;
                 var frame = Object.create(null);
                 var easingFunction = _easing2.default[easing];
@@ -173,9 +209,7 @@ var FX = function () {
                         _this.emit('tick', Math.round(currentTime / duration * 100), frame);
                     } else {
                         (0, _props.setProperties)(el, endProps);
-                        _this.animating = false;
-                        resolve();
-                        _this.emit('done');
+                        _this.complete();
                     }
                 };
                 requestAnimationFrame(function () {
@@ -189,6 +223,30 @@ var FX = function () {
                     requestAnimationFrame(tick);
                 });
             });
+            callbacks.forEach(function (fn) {
+                return _this.promise.then(fn);
+            });
+            return this;
+        }
+
+        /**
+         * Add a callback function for when
+         * the current animation is completed
+         *
+         * @param {Function} fn
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'then',
+        value: function then(fn) {
+            if (!this.queue.isEmpty()) {
+                this.queue.getLast().push(fn);
+            } else if (this.promise) {
+                this.promise.then(fn);
+            }
+            return this;
         }
 
         /**
@@ -197,6 +255,7 @@ var FX = function () {
          *
          * @param {String} name
          * @param {Function} fn
+         * @return {FX}
          * @api public
          */
 
@@ -207,6 +266,7 @@ var FX = function () {
                 this.events[name] = [];
             }
             this.events[name].push(fn);
+            return this;
         }
 
         /**
@@ -220,8 +280,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-                args[_key - 1] = arguments[_key];
+            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                args[_key2 - 1] = arguments[_key2];
             }
 
             var callbacks = this.events[name];
@@ -251,7 +311,7 @@ function fx(el) {
 }
 module.exports = exports['default'];
 
-},{"./easing":1,"./props":3,"./util":4}],3:[function(require,module,exports){
+},{"./easing":1,"./props":3,"./queue":4,"./util":5}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -356,7 +416,114 @@ function setProperties(el, props) {
     }
 }
 
-},{"./util":4}],4:[function(require,module,exports){
+},{"./util":5}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Control a sequence of objects
+ *
+ * @class Queue
+ * @api private
+ */
+var Queue = function () {
+
+    /**
+     * Create a new `Queue` instance
+     *
+     * @constructor
+     * @api public
+     */
+    function Queue() {
+        _classCallCheck(this, Queue);
+
+        this.items = [];
+    }
+
+    /**
+     * Add an object to the end of
+     * the queue
+     *
+     * @param {*} item
+     * @api public
+     */
+
+
+    _createClass(Queue, [{
+        key: "enqueue",
+        value: function enqueue(item) {
+            this.items.push(item);
+        }
+
+        /**
+         * Remove and return the first
+         * object in the queue, return
+         * null if none exist
+         *
+         * @return {*|Null}
+         * @api public
+         */
+
+    }, {
+        key: "dequeue",
+        value: function dequeue() {
+            return this.items.shift() || null;
+        }
+
+        /**
+         * Return the last item in the
+         * queue or null if none exist
+         *
+         * @return {*|Null}
+         * @api public
+         */
+
+    }, {
+        key: "getLast",
+        value: function getLast() {
+            return this.items[this.items.length - 1] || null;
+        }
+
+        /**
+         * Clear the queue
+         *
+         * @api public
+         */
+
+    }, {
+        key: "clear",
+        value: function clear() {
+            this.items = [];
+        }
+
+        /**
+         * Is the queue empty?
+         *
+         * @return {Boolean}
+         * @api public
+         */
+
+    }, {
+        key: "isEmpty",
+        value: function isEmpty() {
+            return this.items.length === 0;
+        }
+    }]);
+
+    return Queue;
+}();
+
+exports.default = Queue;
+module.exports = exports["default"];
+
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Queue Example</title>
+    <script src="../dist/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+fx('#fx-element').animate({left: 300}).then(function() {
+    console.log('done first');
+}).animate({top: 300}).then(function() {
+    console.log('done second');
+}).animate({left: 10}).then(function() {
+    console.log('done third');
+}).animate({top: 10}).then(function() {
+    console.log('done fourth');
+})
+</script>
+
+</body>
+</html>
