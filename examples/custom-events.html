@@ -22,11 +22,9 @@ var anim = fx('#fx-element');
 
 anim.on('start', function() {
     console.log('start');
-});
-anim.on('tick', function(progress) {
+}).on('tick', function(progress) {
     console.log('tick: ' + progress + '%');
-});
-anim.on('done', function() {
+}).on('done', function() {
     console.log('done');
 });
 
