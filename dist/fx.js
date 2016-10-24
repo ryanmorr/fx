@@ -335,6 +335,43 @@ var _util = require('./util');
  */
 var has = {}.hasOwnProperty;
 var valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
+var hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
+var hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
+var rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
+var colorCache = Object.create(null);
+
+/**
+ * Parse a CSS color hex and rgb value
+ * to extract the numberic codes
+ *
+ * @param {String} str
+ * @return {Array}
+ * @api private
+ */
+function parseColor(str) {
+    if (str in colorCache) {
+        return colorCache[str];
+    }
+    var color = str.match(hex6Re),
+        value = void 0;
+    if (color && color.length === 4) {
+        value = [parseInt(color[1], 16), parseInt(color[2], 16), parseInt(color[3], 16)];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(rgbRe);
+    if (color && color.length === 4) {
+        value = [parseInt(color[1], 10), parseInt(color[2], 10), parseInt(color[3], 10)];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(hex3Re);
+    if (color && color.length === 4) {
+        value = [parseInt(color[1] + color[1], 16), parseInt(color[2] + color[2], 16), parseInt(color[3] + color[3], 16)];
+        colorCache[str] = value;
+        return value;
+    }
+}
 
 /**
  * Get the value and units of a
@@ -426,8 +463,8 @@ function getProperties(el, props) {
 
             if ((0, _util.includes)(prop, 'color')) {
                 from = from == null ? getStyle(el, prop) : from;
-                startProps[prop] = (0, _util.parseColor)(from);
-                endProps[prop] = (0, _util.parseColor)(to);
+                startProps[prop] = parseColor(from);
+                endProps[prop] = parseColor(to);
             } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
@@ -466,7 +503,7 @@ function setProperties(el, props, units) {
         value = props[prop];
         switch (prop) {
             case 'opacity':
-                el.style.opacity = value;
+                setStyle(el, prop, value);
                 break;
             case 'scrollTop':
             case 'scrollLeft':
@@ -474,7 +511,7 @@ function setProperties(el, props, units) {
                 break;
             default:
                 if ((0, _util.includes)(prop, 'color')) {
-                    el.style[prop] = 'rgb(\n                        ' + Math.floor(value[0]) + ', \n                        ' + Math.floor(value[1]) + ', \n                        ' + Math.floor(value[2]) + '\n                    )';
+                    setStyle(el, prop, 'rgb(\n                        ' + Math.floor(value[0]) + ', \n                        ' + Math.floor(value[1]) + ', \n                        ' + Math.floor(value[2]) + '\n                    )');
                 } else {
                     var length = units[prop];
                     setStyle(el, prop, value + length);
@@ -598,15 +635,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isArray = isArray;
 exports.includes = includes;
-exports.parseColor = parseColor;
 /**
  * Common variables
  */
 var toString = {}.toString;
-var hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
-var hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
-var rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
-var colorCache = Object.create(null);
 
 /**
  * Is the object an array?
@@ -637,39 +669,6 @@ function includes(str, searchStr) {
         return str.includes(searchStr);
     }
     return str.indexOf(searchStr) !== -1;
-}
-
-/**
- * Parse a CSS color hex and rgb value
- * to extract the numberic codes
- *
- * @param {String} str
- * @return {Array}
- * @api private
- */
-function parseColor(str) {
-    if (str in colorCache) {
-        return colorCache[str];
-    }
-    var color = str.match(hex6Re),
-        value = void 0;
-    if (color && color.length === 4) {
-        value = [parseInt(color[1], 16), parseInt(color[2], 16), parseInt(color[3], 16)];
-        colorCache[str] = value;
-        return value;
-    }
-    color = str.match(rgbRe);
-    if (color && color.length === 4) {
-        value = [parseInt(color[1], 10), parseInt(color[2], 10), parseInt(color[3], 10)];
-        colorCache[str] = value;
-        return value;
-    }
-    color = str.match(hex3Re);
-    if (color && color.length === 4) {
-        value = [parseInt(color[1] + color[1], 16), parseInt(color[2] + color[2], 16), parseInt(color[3] + color[3], 16)];
-        colorCache[str] = value;
-        return value;
-    }
 }
 
 },{}]},{},[2])(2)

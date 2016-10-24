@@ -1,13 +1,61 @@
 /**
  * Import dependencies
  */
-import { isArray, includes, parseColor } from './util';
+import { isArray, includes } from './util';
 
 /**
  * Common variables
  */
 const has = {}.hasOwnProperty;
 const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
+const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
+const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
+const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
+const colorCache = Object.create(null);
+
+/**
+ * Parse a CSS color hex and rgb value
+ * to extract the numberic codes
+ *
+ * @param {String} str
+ * @return {Array}
+ * @api private
+ */
+function parseColor(str) {
+    if (str in colorCache) {
+        return colorCache[str];
+    }
+    let color = str.match(hex6Re), value;
+    if (color && color.length === 4) {
+        value = [
+            parseInt(color[1], 16),
+            parseInt(color[2], 16),
+            parseInt(color[3], 16)
+        ];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(rgbRe);
+    if (color && color.length === 4) {
+        value = [
+            parseInt(color[1], 10),
+            parseInt(color[2], 10),
+            parseInt(color[3], 10)
+        ];
+        colorCache[str] = value;
+        return value;
+    }
+    color = str.match(hex3Re);
+    if (color && color.length === 4) {
+        value = [
+            parseInt(color[1] + color[1], 16),
+            parseInt(color[2] + color[2], 16),
+            parseInt(color[3] + color[3], 16)
+        ];
+        colorCache[str] = value;
+        return value;
+    }
+}
 
 /**
  * Get the value and units of a
@@ -122,7 +170,7 @@ export function setProperties(el, props, units) {
         value = props[prop];
         switch (prop) {
             case 'opacity':
-                el.style.opacity = value;
+                setStyle(el, prop, value);
                 break;
             case 'scrollTop':
             case 'scrollLeft':
@@ -130,11 +178,11 @@ export function setProperties(el, props, units) {
                 break;
             default:
                 if (includes(prop, 'color')) {
-                    el.style[prop] = `rgb(
+                    setStyle(el, prop, `rgb(
                         ${Math.floor(value[0])}, 
                         ${Math.floor(value[1])}, 
                         ${Math.floor(value[2])}
-                    )`;
+                    )`);
                 } else {
                     const length = units[prop];
                     setStyle(el, prop, value + length);
