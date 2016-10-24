@@ -180,7 +180,8 @@ var FX = function () {
                 var startTime = void 0,
                     currentTime = void 0,
                     startProps = void 0,
-                    endProps = void 0;
+                    endProps = void 0,
+                    units = void 0;
                 var tick = function tick(timestamp) {
                     if (!startTime) {
                         startTime = timestamp;
@@ -204,21 +205,22 @@ var FX = function () {
                                 frame[prop] = easingFunction(currentTime, start, end - start, duration);
                             }
                         }
-                        (0, _props.setProperties)(el, frame);
+                        (0, _props.setProperties)(el, frame, units);
                         requestAnimationFrame(tick);
                         _this.emit('tick', Math.round(currentTime / duration * 100), frame);
                     } else {
-                        (0, _props.setProperties)(el, endProps);
+                        (0, _props.setProperties)(el, endProps, units);
                         _this.complete();
                     }
                 };
                 requestAnimationFrame(function () {
                     var _getProperties = (0, _props.getProperties)(el, props);
 
-                    var _getProperties2 = _slicedToArray(_getProperties, 2);
+                    var _getProperties2 = _slicedToArray(_getProperties, 3);
 
                     startProps = _getProperties2[0];
                     endProps = _getProperties2[1];
+                    units = _getProperties2[2];
 
                     requestAnimationFrame(tick);
                 });
@@ -332,6 +334,40 @@ var _util = require('./util');
  * Common variables
  */
 var has = {}.hasOwnProperty;
+var valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
+
+/**
+ * Get the value and units of a
+ * CSS property
+ *
+ * @param {String} style
+ * @return {Array}
+ * @api private
+ */
+function getValue(style) {
+    var match = valueRe.exec(style);
+    return [parseFloat(match[1]) || 0, match[2] || 'px'];
+}
+
+/**
+ * Determine the start point for
+ * the element
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @param {String} end
+ * @param {String} units
+ * @return {Number}
+ */
+function getStartValue(el, prop, end, units) {
+    var start = parseFloat(getStyle(el, prop)) || 0;
+    if (units !== 'px') {
+        setStyle(el, prop, (end || 1) + units);
+        start = (end || 1) / parseFloat(getStyle(el, prop)) * start;
+        setStyle(el, prop, start + units);
+    }
+    return start;
+}
 
 /**
  * Get the computed value of a style
@@ -348,6 +384,19 @@ function getStyle(el, prop) {
 }
 
 /**
+ * Set the value of an element's
+ * style property
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @param {String} value
+ * @api private
+ */
+function setStyle(el, prop, value) {
+    el.style[prop] = value;
+}
+
+/**
  * Get the starting and ending values
  * for each property of an animation
  *
@@ -359,6 +408,7 @@ function getStyle(el, prop) {
 function getProperties(el, props) {
     var startProps = Object.create(null);
     var endProps = Object.create(null);
+    var units = Object.create(null);
     var prop = void 0,
         value = void 0,
         to = void 0,
@@ -383,13 +433,21 @@ function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = to;
             } else {
-                from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
+                var _getValue = getValue(to);
+
+                var _getValue2 = _slicedToArray(_getValue, 2);
+
+                var _value = _getValue2[0];
+                var length = _getValue2[1];
+
+                from = from == null ? getStartValue(el, prop, _value, length) : getValue(from)[0];
                 startProps[prop] = from;
-                endProps[prop] = to;
+                endProps[prop] = _value;
+                units[prop] = length;
             }
         }
     }
-    return [startProps, endProps];
+    return [startProps, endProps, units];
 }
 
 /**
@@ -398,9 +456,10 @@ function getProperties(el, props) {
  *
  * @param {Element} el
  * @param {Object} props
+ * @param {Object} units
  * @api private
  */
-function setProperties(el, props) {
+function setProperties(el, props, units) {
     var prop = void 0,
         value = void 0;
     for (prop in props) {
@@ -417,7 +476,8 @@ function setProperties(el, props) {
                 if ((0, _util.includes)(prop, 'color')) {
                     el.style[prop] = 'rgb(\n                        ' + Math.floor(value[0]) + ', \n                        ' + Math.floor(value[1]) + ', \n                        ' + Math.floor(value[2]) + '\n                    )';
                 } else {
-                    el.style[prop] = value + 'px';
+                    var length = units[prop];
+                    setStyle(el, prop, value + length);
                 }
         }
     }

@@ -7,6 +7,40 @@ import { isArray, includes, parseColor } from './util';
  * Common variables
  */
 const has = {}.hasOwnProperty;
+const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
+
+/**
+ * Get the value and units of a
+ * CSS property
+ *
+ * @param {String} style
+ * @return {Array}
+ * @api private
+ */
+function getValue(style) {
+    const match = valueRe.exec(style);
+    return [parseFloat(match[1]) || 0, match[2] || 'px'];
+}
+
+/**
+ * Determine the start point for
+ * the element
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @param {String} end
+ * @param {String} units
+ * @return {Number}
+ */
+function getStartValue(el, prop, end, units) {
+    let start = parseFloat(getStyle(el, prop)) || 0;
+    if (units !== 'px') {
+        setStyle(el, prop, (end || 1) + units);
+        start = ((end || 1) / parseFloat(getStyle(el, prop))) * start;
+        setStyle(el, prop, start + units);
+    }
+    return start;
+}
 
 /**
  * Get the computed value of a style
@@ -23,6 +57,19 @@ function getStyle(el, prop) {
 }
 
 /**
+ * Set the value of an element's
+ * style property
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @param {String} value
+ * @api private
+ */
+function setStyle(el, prop, value) {
+    el.style[prop] = value;
+}
+
+/**
  * Get the starting and ending values
  * for each property of an animation
  *
@@ -34,6 +81,7 @@ function getStyle(el, prop) {
 export function getProperties(el, props) {
     const startProps = Object.create(null);
     const endProps = Object.create(null);
+    const units = Object.create(null);
     let prop, value, to, from;
     for (prop in props) {
         if (has.call(props, prop)) {
@@ -48,13 +96,15 @@ export function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = to;
             } else {
-                from = from == null ? parseFloat(getStyle(el, prop)) || 0 : from;
+                const [value, length] = getValue(to);
+                from = from == null ? getStartValue(el, prop, value, length) : getValue(from)[0];
                 startProps[prop] = from;
-                endProps[prop] = to;
+                endProps[prop] = value;
+                units[prop] = length;
             }
         }
     }
-    return [startProps, endProps];
+    return [startProps, endProps, units];
 }
 
 /**
@@ -63,9 +113,10 @@ export function getProperties(el, props) {
  *
  * @param {Element} el
  * @param {Object} props
+ * @param {Object} units
  * @api private
  */
-export function setProperties(el, props) {
+export function setProperties(el, props, units) {
     let prop, value;
     for (prop in props) {
         value = props[prop];
@@ -85,7 +136,8 @@ export function setProperties(el, props) {
                         ${Math.floor(value[2])}
                     )`;
                 } else {
-                    el.style[prop] = value + 'px';
+                    const length = units[prop];
+                    setStyle(el, prop, value + length);
                 }
         }
     }

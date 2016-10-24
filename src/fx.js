@@ -97,7 +97,7 @@ class FX {
             const el = this.el;
             const frame = Object.create(null);
             const easingFunction = easingFunctions[easing];
-            let startTime, currentTime, startProps, endProps;
+            let startTime, currentTime, startProps, endProps, units;
             const tick = (timestamp) => {
                 if (!startTime) {
                     startTime = timestamp;
@@ -127,16 +127,16 @@ class FX {
                             );
                         }
                     }
-                    setProperties(el, frame);
+                    setProperties(el, frame, units);
                     requestAnimationFrame(tick);
                     this.emit('tick', Math.round((currentTime / duration) * 100), frame);
                 } else {
-                    setProperties(el, endProps);
+                    setProperties(el, endProps, units);
                     this.complete();
                 }
             };
             requestAnimationFrame(() => {
-                [startProps, endProps] = getProperties(el, props);
+                [startProps, endProps, units] = getProperties(el, props);
                 requestAnimationFrame(tick);
             });
         });
