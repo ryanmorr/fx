@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Basic Example</title>
+    <script src="../dist/fx.js"></script>
+</head>
+<body>
+
+<style>
+select {
+    vertical-align: middle;
+    margin: 0 15px;
+}
+
+#fx-element {
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<section>
+    <label>Easing Function:</label>
+    <select>
+        <option value="linear">linear</option>
+        <option value="ease-in-quad">ease-in-quad</option>
+        <option value="ease-out-quad">ease-out-quad</option>
+        <option value="ease-in-out-quad">ease-in-out-quad</option>
+        <option value="ease-in-cubic">ease-in-cubic</option>
+        <option value="ease-out-cubic">ease-out-cubic</option>
+        <option value="ease-in-out-cubic">ease-in-out-cubic</option>
+        <option value="ease-in-quart">ease-in-quart</option>
+        <option value="ease-out-quart">ease-out-quart</option>
+        <option value="ease-in-out-quart">ease-in-out-quart</option>
+        <option value="ease-in-quint">ease-in-quint</option>
+        <option value="ease-out-quint">ease-out-quint</option>
+        <option value="ease-in-out-quint">ease-in-out-quint</option>
+        <option value="ease-in-sine">ease-in-sine</option>
+        <option value="ease-out-sine">ease-out-sine</option>
+        <option value="ease-in-out-sine">ease-in-out-sine</option>
+        <option value="ease-in-expo">ease-in-expo</option>
+        <option value="ease-out-expo">ease-out-expo</option>
+        <option value="ease-in-out-expo">ease-in-out-expo</option>
+        <option value="ease-in-circ">ease-in-circ</option>
+        <option value="ease-out-circ">ease-out-circ</option>
+        <option value="ease-in-out-circ">ease-in-out-circ</option>
+        <option value="ease-in-elastic">ease-in-elastic</option>
+        <option value="ease-out-elastic">ease-out-elastic</option>
+        <option value="ease-in-out-elastic">ease-in-out-elastic</option>
+        <option value="ease-in-back">ease-in-back</option>
+        <option value="ease-out-back">ease-out-back</option>
+        <option value="ease-in-out-back">ease-in-out-back</option>
+        <option value="ease-in-bounce">ease-in-bounce</option>
+        <option value="ease-out-bounce">ease-out-bounce</option>
+        <option value="ease-in-out-bounce">ease-in-out-bounce</option>
+    </select>
+    <button>Animate</button>
+</section>
+
+<div id="fx-element"></div>
+
+<script>
+var easing = 'linear';
+var select = document.querySelector('select');
+var btn = document.querySelector('button');
+var el = document.querySelector('#fx-element');
+var anim = fx(el);
+
+anim.on('start', function() {
+    el.style.left = '10px';
+});
+
+select.addEventListener('change', function() {
+    easing = select.options[select.selectedIndex].value;
+});
+
+btn.addEventListener('click', animate);
+
+function animate() {
+    anim.animate({left: 500}, 1000, easing);
+}
+
+</script>
+
+</body>
+</html>

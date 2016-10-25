@@ -144,11 +144,11 @@ export function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = to;
             } else {
-                const [value, length] = getValue(to);
-                from = from == null ? getStartValue(el, prop, value, length) : getValue(from)[0];
+                const [value, unit] = getValue(to);
+                from = from == null ? getStartValue(el, prop, value, unit) : getValue(from)[0];
                 startProps[prop] = from;
                 endProps[prop] = value;
-                units[prop] = length;
+                units[prop] = unit;
             }
         }
     }
@@ -184,8 +184,8 @@ export function setProperties(el, props, units) {
                         ${Math.floor(value[2])}
                     )`);
                 } else {
-                    const length = units[prop];
-                    setStyle(el, prop, value + length);
+                    const unit = units[prop];
+                    setStyle(el, prop, value + unit);
                 }
         }
     }
