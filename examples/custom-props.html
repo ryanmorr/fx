@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Custom Properties Example</title>
+    <script src="../dist/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+fx('#fx-element').animate({foo: 100, bar: 200}).on('tick', function(progress, frame) {
+    console.log('foo: ' + frame.foo + ', bar: ' + frame.bar);
+});
+</script>
+
+</body>
+</html>
