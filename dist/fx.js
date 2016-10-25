@@ -196,8 +196,7 @@ var easingFunctions = {
         return c / 2 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b;
     },
     'ease-in-bounce': function easeInBounce(t, b, c, d) {
-        var v = easingFunctions['ease-out-bounce'](d - t, 0, c, d);
-        return c - v + b;
+        return c - easingFunctions['ease-out-bounce'](d - t, 0, c, d) + b;
     },
     'ease-out-bounce': function easeOutBounce(t, b, c, d) {
         if ((t /= d) < 1 / 2.75) {
@@ -211,11 +210,9 @@ var easingFunctions = {
     },
     'ease-in-out-bounce': function easeInOutBounce(t, b, c, d) {
         if (t < d / 2) {
-            var _v = easingFunctions['ease-in-bounce'](t * 2, 0, c, d);
-            return _v * 0.5 + b;
+            return easingFunctions['ease-in-bounce'](t * 2, 0, c, d) * 0.5 + b;
         }
-        var v = easingFunctions['ease-out-bounce'](t * 2 - d, 0, c, d);
-        return v * 0.5 + c * 0.5 + b;
+        return easingFunctions['ease-out-bounce'](t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
     }
 };
 
@@ -686,7 +683,7 @@ function getProperties(el, props) {
                 endProps[prop] = _value;
                 units[prop] = unit;
             } else {
-                startProps[prop] = from;
+                startProps[prop] = 0;
                 endProps[prop] = to;
             }
         }

@@ -212,8 +212,7 @@ const easingFunctions = {
     },
 
     'ease-in-bounce'(t, b, c, d) {
-        const v = easingFunctions['ease-out-bounce'](d - t, 0, c, d);
-        return c - v + b;
+        return c - easingFunctions['ease-out-bounce'](d - t, 0, c, d) + b;
     },
 
     'ease-out-bounce'(t, b, c, d) {
@@ -229,11 +228,9 @@ const easingFunctions = {
 
     'ease-in-out-bounce'(t, b, c, d) {
         if (t < d / 2) {
-            const v = easingFunctions['ease-in-bounce'](t * 2, 0, c, d);
-            return v * 0.5 + b;
+            return easingFunctions['ease-in-bounce'](t * 2, 0, c, d) * 0.5 + b;
         }
-        const v = easingFunctions['ease-out-bounce'](t * 2 - d, 0, c, d);
-        return v * 0.5 + c * 0.5 + b;
+        return easingFunctions['ease-out-bounce'](t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
     }
 };
 

@@ -150,7 +150,7 @@ export function getProperties(el, props) {
                 endProps[prop] = value;
                 units[prop] = unit;
             } else {
-                startProps[prop] = from;
+                startProps[prop] = 0;
                 endProps[prop] = to;
             }
         }
