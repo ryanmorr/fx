@@ -413,6 +413,7 @@ var FX = function () {
                         _this.emit('tick', Math.round(currentTime / duration * 100), frame);
                     } else {
                         (0, _props.setProperties)(el, endProps, units);
+                        _this.emit('tick', 100, endProps);
                         _this.complete();
                     }
                 };
@@ -672,7 +673,7 @@ function getProperties(el, props) {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
                 endProps[prop] = to;
-            } else {
+            } else if (prop in el.style) {
                 var _getValue = getValue(to);
 
                 var _getValue2 = _slicedToArray(_getValue, 2);
@@ -684,6 +685,9 @@ function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = _value;
                 units[prop] = unit;
+            } else {
+                startProps[prop] = from;
+                endProps[prop] = to;
             }
         }
     }
@@ -713,11 +717,13 @@ function setProperties(el, props, units) {
                 el[prop] = value;
                 break;
             default:
-                if ((0, _util.includes)(prop, 'color')) {
-                    setStyle(el, prop, 'rgb(\n                        ' + Math.floor(value[0]) + ', \n                        ' + Math.floor(value[1]) + ', \n                        ' + Math.floor(value[2]) + '\n                    )');
-                } else {
-                    var unit = units[prop];
-                    setStyle(el, prop, value + unit);
+                if (prop in el.style) {
+                    if ((0, _util.includes)(prop, 'color')) {
+                        setStyle(el, prop, 'rgb(\n                            ' + Math.floor(value[0]) + ', \n                            ' + Math.floor(value[1]) + ', \n                            ' + Math.floor(value[2]) + '\n                        )');
+                    } else {
+                        var unit = units[prop];
+                        setStyle(el, prop, value + unit);
+                    }
                 }
         }
     }

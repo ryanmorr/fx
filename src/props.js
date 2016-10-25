@@ -143,12 +143,15 @@ export function getProperties(el, props) {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
                 endProps[prop] = to;
-            } else {
+            } else if (prop in el.style) {
                 const [value, unit] = getValue(to);
                 from = from == null ? getStartValue(el, prop, value, unit) : getValue(from)[0];
                 startProps[prop] = from;
                 endProps[prop] = value;
                 units[prop] = unit;
+            } else {
+                startProps[prop] = from;
+                endProps[prop] = to;
             }
         }
     }
@@ -177,15 +180,17 @@ export function setProperties(el, props, units) {
                 el[prop] = value;
                 break;
             default:
-                if (includes(prop, 'color')) {
-                    setStyle(el, prop, `rgb(
-                        ${Math.floor(value[0])}, 
-                        ${Math.floor(value[1])}, 
-                        ${Math.floor(value[2])}
-                    )`);
-                } else {
-                    const unit = units[prop];
-                    setStyle(el, prop, value + unit);
+                if (prop in el.style) {
+                    if (includes(prop, 'color')) {
+                        setStyle(el, prop, `rgb(
+                            ${Math.floor(value[0])}, 
+                            ${Math.floor(value[1])}, 
+                            ${Math.floor(value[2])}
+                        )`);
+                    } else {
+                        const unit = units[prop];
+                        setStyle(el, prop, value + unit);
+                    }
                 }
         }
     }

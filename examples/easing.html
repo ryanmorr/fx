@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>FX Basic Example</title>
+    <title>FX Easing Example</title>
     <script src="../dist/fx.js"></script>
 </head>
 <body>
@@ -71,7 +71,11 @@ var el = document.querySelector('#fx-element');
 var anim = fx(el);
 
 anim.on('start', function() {
-    el.style.left = '10px';
+    el.style.left = 'translateX(0px)';
+});
+
+anim.on('tick', function(progress, frame) {
+    el.style.transform = 'translateX(' + frame.value + 'px)';
 });
 
 select.addEventListener('change', function() {
@@ -81,7 +85,7 @@ select.addEventListener('change', function() {
 btn.addEventListener('click', animate);
 
 function animate() {
-    anim.animate({left: 500}, 1000, easing);
+    anim.animate({value: 500}, 1000, easing);
 }
 
 </script>

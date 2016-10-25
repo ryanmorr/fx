@@ -132,6 +132,7 @@ class FX {
                     this.emit('tick', Math.round((currentTime / duration) * 100), frame);
                 } else {
                     setProperties(el, endProps, units);
+                    this.emit('tick', 100, endProps);
                     this.complete();
                 }
             };
