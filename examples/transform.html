@@ -12,14 +12,19 @@
     width: 100px;
     height: 100px;
     background-color: #FF0000;
-    transform: rotate(45deg);
+    perspective: 100px;
 }
 </style>
 
 <div id="fx-element"></div>
 
 <script>
-fx('#fx-element').animate({translateX: 500});
+fx('#fx-element')
+    .animate({translateY: '10em'})
+    .animate({translateX: '100%'})
+    .animate({rotate: '45deg'})
+    .animate({scale: 2})
+    .animate({skewX: 45})
 </script>
 
 </body>

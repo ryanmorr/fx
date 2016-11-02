@@ -8,13 +8,11 @@ import { isArray, includes } from './util';
  */
 const has = {}.hasOwnProperty;
 const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
-const matrixRe = /^matrix\(([^)]*)\)$/;
-const commaSeparatedRe = /\s*,\s*/;
 const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 const colorCache = Object.create(null);
-const defaultMatrix = [1, 0, 0, 1, 0, 0];
+
 
 /**
  * Supported transform properties
@@ -22,9 +20,15 @@ const defaultMatrix = [1, 0, 0, 1, 0, 0];
 const transformProps = [
     'translateX',
     'translateY',
+    'translateZ',
     'rotate',
+    'rotateX',
+    'rotateY',
+    'rotateZ',
+    'scale',
     'scaleX',
     'scaleY',
+    'scaleZ',
     'skewX',
     'skewY'
 ];
@@ -85,43 +89,21 @@ function parseColor(str) {
 }
 
 /**
- * Parse a CSS transform matrix
- *
- * @param {Element} el
- * @return {Array}
- * @api private
- */
-function parseTransform(el) {
-    let matrix = defaultMatrix;
-    const transform = getStyle(el, transformProp);
-    if (transform && transform !== 'none') {
-        matrix = transform.match(matrixRe)[1].split(commaSeparatedRe).map(parseFloat);
-    }
-    const scaleX = matrix[0];
-    const skewX = matrix[1];
-    const rotate = Math.round(Math.atan2(skewX, scaleX) * (180 / Math.PI)) || 0;
-    return [
-        scaleX,
-        matrix[3],
-        skewX,
-        matrix[2],
-        matrix[4],
-        matrix[5],
-        rotate
-    ];
-}
-
-/**
  * Get the value and units of a
  * CSS property
  *
+ * @param {String} prop
  * @param {String} style
  * @return {Array}
  * @api private
  */
-function getValue(style) {
+function getValue(prop, style) {
     const match = valueRe.exec(style);
-    return [parseFloat(match[1]) || 0, match[2] || 'px'];
+    let units = match[2] || '';
+    if (!units && prop.indexOf('scale') === -1) {
+        units = (prop.indexOf('rotate') > -1 || prop.indexOf('skew') > -1) ? 'deg' : 'px';
+    }
+    return [parseFloat(match[1]) || 0, units];
 }
 
 /**
@@ -197,20 +179,16 @@ export function getProperties(el, props) {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
                 endProps[prop] = to;
-            } else if (transformProps.indexOf(prop) !== -1 && !('transform' in startProps)) {
-                const matrix = parseTransform(el);
-                startProps.transform = matrix;
-                endProps.transform = [
-                    'scaleX' in props ? props.scaleX : matrix[0],
-                    'scaleY' in props ? props.scaleY : matrix[1],
-                    'skewX' in props ? props.skewX : matrix[2],
-                    'skewY' in props ? props.skewY : matrix[3],
-                    'translateX' in props ? props.translateX : matrix[4],
-                    'translateY' in props ? props.translateY : matrix[5],
-                    'rotate' in props ? props.rotate : matrix[6]
-                ];
+            } else if (transformProps.indexOf(prop) !== -1) {
+                if (from == null) {
+                    from = prop.indexOf('scale') > -1 ? 1 : 0;
+                }
+                const [value, unit] = getValue(prop, to);
+                startProps[prop] = from;
+                endProps[prop] = value;
+                units[prop] = unit;
             } else if (prop in el.style) {
-                const [value, unit] = getValue(to);
+                const [value, unit] = getValue(prop, to);
                 from = from == null ? getStartValue(el, prop, value, unit) : getValue(from)[0];
                 startProps[prop] = from;
                 endProps[prop] = value;
@@ -245,18 +223,6 @@ export function setProperties(el, props, units) {
             case 'scrollLeft':
                 el[prop] = value;
                 break;
-            case 'transform':
-                const transform = [
-                    'scaleX(' + value[0] + ')',
-                    'scaleY(' + value[1] + ')',
-                    'skewX(' + value[2] + 'deg)',
-                    'skewY(' + value[3] + 'deg)',
-                    'translateX(' + value[4] + 'px)',
-                    'translateY(' + value[5] + 'px)',
-                    'rotate(' + value[6] + 'deg)'
-                ];
-                setStyle(el, transformProp, transform.join(' '));
-                break;
             default:
                 if (prop in el.style) {
                     if (includes(prop, 'color')) {
@@ -271,5 +237,14 @@ export function setProperties(el, props, units) {
                     }
                 }
         }
+    }
+    const transforms = transformProps.reduce((arr, prop) => {
+        if (prop in props) {
+            arr.push(prop + '(' + props[prop] + units[prop] + ')');
+        }
+        return arr;
+    }, []);
+    if (transforms.length) {
+        setStyle(el, transformProp, transforms.join(' '));
     }
 }
