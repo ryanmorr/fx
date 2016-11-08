@@ -102,7 +102,7 @@ class FX {
                 if (!startTime) {
                     startTime = timestamp;
                 }
-                if (timestamp < startTime + duration) {
+                if (this.isAnimating() && (timestamp < startTime + duration)) {
                     currentTime = timestamp - startTime;
                     let start, end, prop, i, len;
                     for (prop in startProps) {
@@ -158,6 +158,32 @@ class FX {
             this.queue.getLast().push(fn);
         } else if (this.promise) {
             this.promise.then(fn);
+        }
+        return this;
+    }
+
+    /**
+     * Stop the current animation
+     *
+     * @return {FX}
+     * @api public
+     */
+    stop() {
+        if (this.isAnimating()) {
+            this.animating = false;
+        }
+        return this;
+    }
+
+    /**
+     * Clear the animation queue
+     *
+     * @return {FX}
+     * @api public
+     */
+    clear() {
+        if (!this.queue.isEmpty()) {
+            this.queue.clear();
         }
         return this;
     }

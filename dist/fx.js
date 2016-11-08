@@ -386,7 +386,7 @@ var FX = function () {
                     if (!startTime) {
                         startTime = timestamp;
                     }
-                    if (timestamp < startTime + duration) {
+                    if (_this.isAnimating() && timestamp < startTime + duration) {
                         currentTime = timestamp - startTime;
                         var start = void 0,
                             end = void 0,
@@ -448,6 +448,38 @@ var FX = function () {
                 this.queue.getLast().push(fn);
             } else if (this.promise) {
                 this.promise.then(fn);
+            }
+            return this;
+        }
+
+        /**
+         * Stop the current animation
+         *
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'stop',
+        value: function stop() {
+            if (this.isAnimating()) {
+                this.animating = false;
+            }
+            return this;
+        }
+
+        /**
+         * Clear the animation queue
+         *
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'clear',
+        value: function clear() {
+            if (!this.queue.isEmpty()) {
+                this.queue.clear();
             }
             return this;
         }
@@ -856,7 +888,7 @@ var Queue = function () {
     }, {
         key: "clear",
         value: function clear() {
-            this.items = [];
+            this.items.length = 0;
         }
 
         /**

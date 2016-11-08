@@ -57,7 +57,7 @@ export default class Queue {
      * @api public
      */
     clear() {
-        this.items = [];
+        this.items.length = 0;
     }
 
     /**
