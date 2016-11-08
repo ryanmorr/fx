@@ -180,10 +180,12 @@ export function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = to;
             } else if (transformProps.indexOf(prop) !== -1) {
+                const [value, unit] = getValue(prop, to);
                 if (from == null) {
                     from = prop.indexOf('scale') > -1 ? 1 : 0;
+                } else {
+                    from = getValue(prop, from)[0];
                 }
-                const [value, unit] = getValue(prop, to);
                 startProps[prop] = from;
                 endProps[prop] = value;
                 units[prop] = unit;

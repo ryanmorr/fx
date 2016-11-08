@@ -692,10 +692,6 @@ function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = to;
             } else if (transformProps.indexOf(prop) !== -1) {
-                if (from == null) {
-                    from = prop.indexOf('scale') > -1 ? 1 : 0;
-                }
-
                 var _getValue = getValue(prop, to);
 
                 var _getValue2 = _slicedToArray(_getValue, 2);
@@ -703,6 +699,11 @@ function getProperties(el, props) {
                 var _value = _getValue2[0];
                 var unit = _getValue2[1];
 
+                if (from == null) {
+                    from = prop.indexOf('scale') > -1 ? 1 : 0;
+                } else {
+                    from = getValue(prop, from)[0];
+                }
                 startProps[prop] = from;
                 endProps[prop] = _value;
                 units[prop] = unit;
