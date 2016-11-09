@@ -65,6 +65,7 @@ class FX {
     complete() {
         if (this.isAnimating()) {
             this.animating = false;
+            this.el.style.removeProperty('will-change');
             this.resolve();
             this.emit('done');
             this.promise = this.resolve = null;
@@ -97,7 +98,7 @@ class FX {
             const el = this.el;
             const frame = Object.create(null);
             const easingFunction = easingFunctions[easing];
-            let startTime, currentTime, startProps, endProps, units;
+            let startTime, currentTime, startProps, endProps, units, willChange;
             const tick = (timestamp) => {
                 if (!startTime) {
                     startTime = timestamp;
@@ -137,7 +138,10 @@ class FX {
                 }
             };
             requestAnimationFrame(() => {
-                [startProps, endProps, units] = getProperties(el, props);
+                [startProps, endProps, units, willChange] = getProperties(el, props);
+                if (willChange.length) {
+                    el.style.willChange = willChange.join(', ');
+                }
                 requestAnimationFrame(tick);
             });
         });

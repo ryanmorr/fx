@@ -7,12 +7,12 @@ import { isArray, includes } from './util';
  * Common variables
  */
 const has = {}.hasOwnProperty;
+const kebabRe = /([a-z])([A-Z])/g;
 const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
 const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 const colorCache = Object.create(null);
-
 
 /**
  * Supported transform properties
@@ -37,12 +37,24 @@ const transformProps = [
  * Feature test for the supported
  * `transform` property
  */
-const transformProp = (() => {
-    if ('webkitTransform' in document.documentElement.style) {
-        return 'webkitTransform';
+const [transformProp, transformCSSProp] = (() => {
+    if ('transform' in document.documentElement.style) {
+        return ['transform', 'transform'];
     }
-    return 'transform';
+    return ['webkitTransform', 'webkit-transform'];
 })();
+
+/**
+ * Convert a camel-cased CSS property
+ * to kebab-case (hyphenated)
+ *
+ * @param {String} prop
+ * @return {String}
+ * @api private
+ */
+function toKebabCase(prop) {
+    return prop.replace(kebabRe, '$1-$2').toLowerCase();
+}
 
 /**
  * Parse a CSS color hex and rgb value
@@ -166,6 +178,7 @@ export function getProperties(el, props) {
     const startProps = Object.create(null);
     const endProps = Object.create(null);
     const units = Object.create(null);
+    const willChange = [];
     let prop, value, to, from;
     for (prop in props) {
         if (has.call(props, prop)) {
@@ -175,6 +188,7 @@ export function getProperties(el, props) {
                 from = from == null ? getStyle(el, prop) : from;
                 startProps[prop] = parseColor(from);
                 endProps[prop] = parseColor(to);
+                willChange.push(toKebabCase(prop));
             } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
@@ -189,19 +203,23 @@ export function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = value;
                 units[prop] = unit;
+                if (willChange.indexOf(transformCSSProp) === -1) {
+                    willChange.push(transformCSSProp);
+                }
             } else if (prop in el.style) {
                 const [value, unit] = getValue(prop, to);
                 from = from == null ? getStartValue(el, prop, value, unit) : getValue(from)[0];
                 startProps[prop] = from;
                 endProps[prop] = value;
                 units[prop] = unit;
+                willChange.push(toKebabCase(prop));
             } else {
                 startProps[prop] = 0;
                 endProps[prop] = to;
             }
         }
     }
-    return [startProps, endProps, units];
+    return [startProps, endProps, units, willChange];
 }
 
 /**

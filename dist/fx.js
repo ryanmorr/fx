@@ -333,6 +333,7 @@ var FX = function () {
         value: function complete() {
             if (this.isAnimating()) {
                 this.animating = false;
+                this.el.style.removeProperty('will-change');
                 this.resolve();
                 this.emit('done');
                 this.promise = this.resolve = null;
@@ -381,7 +382,8 @@ var FX = function () {
                     currentTime = void 0,
                     startProps = void 0,
                     endProps = void 0,
-                    units = void 0;
+                    units = void 0,
+                    willChange = void 0;
                 var tick = function tick(timestamp) {
                     if (!startTime) {
                         startTime = timestamp;
@@ -417,12 +419,16 @@ var FX = function () {
                 requestAnimationFrame(function () {
                     var _getProperties = (0, _props.getProperties)(el, props);
 
-                    var _getProperties2 = _slicedToArray(_getProperties, 3);
+                    var _getProperties2 = _slicedToArray(_getProperties, 4);
 
                     startProps = _getProperties2[0];
                     endProps = _getProperties2[1];
                     units = _getProperties2[2];
+                    willChange = _getProperties2[3];
 
+                    if (willChange.length) {
+                        el.style.willChange = willChange.join(', ');
+                    }
                     requestAnimationFrame(tick);
                 });
             });
@@ -567,6 +573,7 @@ var _util = require('./util');
  * Common variables
  */
 var has = {}.hasOwnProperty;
+var kebabRe = /([a-z])([A-Z])/g;
 var valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
 var hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 var hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
@@ -582,12 +589,31 @@ var transformProps = ['translateX', 'translateY', 'translateZ', 'rotate', 'rotat
  * Feature test for the supported
  * `transform` property
  */
-var transformProp = function () {
-    if ('webkitTransform' in document.documentElement.style) {
-        return 'webkitTransform';
+
+var _ref = function () {
+    if ('transform' in document.documentElement.style) {
+        return ['transform', 'transform'];
     }
-    return 'transform';
+    return ['webkitTransform', 'webkit-transform'];
 }();
+
+var _ref2 = _slicedToArray(_ref, 2);
+
+var transformProp = _ref2[0];
+var transformCSSProp = _ref2[1];
+
+/**
+ * Convert a camel-cased CSS property
+ * to kebab-case (hyphenated)
+ *
+ * @param {String} prop
+ * @return {String}
+ * @api private
+ */
+
+function toKebabCase(prop) {
+    return prop.replace(kebabRe, '$1-$2').toLowerCase();
+}
 
 /**
  * Parse a CSS color hex and rgb value
@@ -700,6 +726,7 @@ function getProperties(el, props) {
     var startProps = Object.create(null);
     var endProps = Object.create(null);
     var units = Object.create(null);
+    var willChange = [];
     var prop = void 0,
         value = void 0,
         to = void 0,
@@ -708,17 +735,18 @@ function getProperties(el, props) {
         if (has.call(props, prop)) {
             value = props[prop];
 
-            var _ref = (0, _util.isArray)(value) ? value : [null, value];
+            var _ref3 = (0, _util.isArray)(value) ? value : [null, value];
 
-            var _ref2 = _slicedToArray(_ref, 2);
+            var _ref4 = _slicedToArray(_ref3, 2);
 
-            from = _ref2[0];
-            to = _ref2[1];
+            from = _ref4[0];
+            to = _ref4[1];
 
             if ((0, _util.includes)(prop, 'color')) {
                 from = from == null ? getStyle(el, prop) : from;
                 startProps[prop] = parseColor(from);
                 endProps[prop] = parseColor(to);
+                willChange.push(toKebabCase(prop));
             } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
                 from = from == null ? el[prop] : from;
                 startProps[prop] = from;
@@ -739,6 +767,9 @@ function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = _value;
                 units[prop] = unit;
+                if (willChange.indexOf(transformCSSProp) === -1) {
+                    willChange.push(transformCSSProp);
+                }
             } else if (prop in el.style) {
                 var _getValue3 = getValue(prop, to);
 
@@ -751,13 +782,14 @@ function getProperties(el, props) {
                 startProps[prop] = from;
                 endProps[prop] = _value2;
                 units[prop] = _unit;
+                willChange.push(toKebabCase(prop));
             } else {
                 startProps[prop] = 0;
                 endProps[prop] = to;
             }
         }
     }
-    return [startProps, endProps, units];
+    return [startProps, endProps, units, willChange];
 }
 
 /**
