@@ -70,14 +70,6 @@ var btn = document.querySelector('button');
 var el = document.querySelector('#fx-element');
 var anim = fx(el);
 
-anim.on('start', function() {
-    el.style.left = 'translateX(0px)';
-});
-
-anim.on('tick', function(progress, frame) {
-    el.style.transform = 'translateX(' + frame.value + 'px)';
-});
-
 select.addEventListener('change', function() {
     easing = select.options[select.selectedIndex].value;
 });
@@ -85,7 +77,7 @@ select.addEventListener('change', function() {
 btn.addEventListener('click', animate);
 
 function animate() {
-    anim.animate({value: 1000}, 1000, easing);
+    anim.animate({translateX: 1000}, 1000, easing);
 }
 
 </script>
