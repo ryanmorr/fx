@@ -265,7 +265,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * Default animation options
  */
 var defaultDuration = 700;
-var defaultEasing = 'ease-out';
+var defaultEasing = 'ease-in-out';
 
 /**
  * Animation class

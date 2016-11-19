@@ -10,7 +10,7 @@ import { isArray } from './util';
  * Default animation options
  */
 const defaultDuration = 700;
-const defaultEasing = 'ease-out';
+const defaultEasing = 'ease-in-out';
 
 /**
  * Animation class
