@@ -578,7 +578,7 @@ var valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
 var hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 var hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 var rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
-var colorCache = Object.create(null);
+var cache = Object.create(null);
 
 /**
  * Supported transform properties
@@ -612,7 +612,12 @@ var transformCSSProp = _ref2[1];
  */
 
 function toKebabCase(prop) {
-    return prop.replace(kebabRe, '$1-$2').toLowerCase();
+    if (prop in cache) {
+        return cache[prop];
+    }
+    var value = prop.replace(kebabRe, '$1-$2').toLowerCase();
+    cache[prop] = value;
+    return value;
 }
 
 /**
@@ -624,26 +629,26 @@ function toKebabCase(prop) {
  * @api private
  */
 function parseColor(str) {
-    if (str in colorCache) {
-        return colorCache[str];
+    if (str in cache) {
+        return cache[str];
     }
     var color = str.match(hex6Re),
         value = void 0;
     if (color && color.length === 4) {
         value = [parseInt(color[1], 16), parseInt(color[2], 16), parseInt(color[3], 16)];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
     color = str.match(rgbRe);
     if (color && color.length === 4) {
         value = [parseInt(color[1], 10), parseInt(color[2], 10), parseInt(color[3], 10)];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
     color = str.match(hex3Re);
     if (color && color.length === 4) {
         value = [parseInt(color[1] + color[1], 16), parseInt(color[2] + color[2], 16), parseInt(color[3] + color[3], 16)];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
 }

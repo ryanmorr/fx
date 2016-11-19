@@ -12,7 +12,7 @@ const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
 const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
-const colorCache = Object.create(null);
+const cache = Object.create(null);
 
 /**
  * Supported transform properties
@@ -53,7 +53,12 @@ const [transformProp, transformCSSProp] = (() => {
  * @api private
  */
 function toKebabCase(prop) {
-    return prop.replace(kebabRe, '$1-$2').toLowerCase();
+    if (prop in cache) {
+        return cache[prop];
+    }
+    const value = prop.replace(kebabRe, '$1-$2').toLowerCase();
+    cache[prop] = value;
+    return value;
 }
 
 /**
@@ -65,8 +70,8 @@ function toKebabCase(prop) {
  * @api private
  */
 function parseColor(str) {
-    if (str in colorCache) {
-        return colorCache[str];
+    if (str in cache) {
+        return cache[str];
     }
     let color = str.match(hex6Re), value;
     if (color && color.length === 4) {
@@ -75,7 +80,7 @@ function parseColor(str) {
             parseInt(color[2], 16),
             parseInt(color[3], 16)
         ];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
     color = str.match(rgbRe);
@@ -85,7 +90,7 @@ function parseColor(str) {
             parseInt(color[2], 10),
             parseInt(color[3], 10)
         ];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
     color = str.match(hex3Re);
@@ -95,7 +100,7 @@ function parseColor(str) {
             parseInt(color[2] + color[2], 16),
             parseInt(color[3] + color[3], 16)
         ];
-        colorCache[str] = value;
+        cache[str] = value;
         return value;
     }
 }
