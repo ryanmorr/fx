@@ -219,9 +219,9 @@ var easingFunctions = {
 /**
  * Create shortcut for default easing functions
  */
-easingFunctions['ease-in'] = easingFunctions['ease-in-sine'];
-easingFunctions['ease-out'] = easingFunctions['ease-out-sine'];
-easingFunctions['ease-in-out'] = easingFunctions['ease-in-out-sine'];
+easingFunctions['ease-in'] = easingFunctions['ease-in-quart'];
+easingFunctions['ease-out'] = easingFunctions['ease-out-quart'];
+easingFunctions['ease-in-out'] = easingFunctions['ease-in-out-quart'];
 
 /**
  * Export easing functions
