@@ -64,7 +64,6 @@ class FX {
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
-     * @param {Promise}
      * @return {FX}
      * @api public
      */
@@ -137,7 +136,6 @@ class FX {
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
-     * @param {Promise}
      * @return {FX}
      * @api public
      */
@@ -151,7 +149,6 @@ class FX {
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
-     * @param {Promise}
      * @return {FX}
      * @api public
      */
@@ -166,7 +163,6 @@ class FX {
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
-     * @param {Promise}
      * @return {FX}
      * @api public
      */
@@ -197,7 +193,6 @@ class FX {
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
-     * @param {Promise}
      * @return {FX}
      * @api public
      */
@@ -219,6 +214,21 @@ class FX {
                 break;
         }
         return this.animate(props, duration, easing, ...callbacks);
+    }
+
+    /**
+     * Move the element
+     *
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @return {FX}
+     * @api public
+     */
+    move(x, y, duration = 350, easing = 'ease-in', ...callbacks) {
+        return this.animate({translateX: x, translateY: y}, duration, easing, ...callbacks);
     }
 
     /**

@@ -26,6 +26,7 @@ select {
 <section>
     <label>Effect:</label>
     <select>
+        <option value="move">Move</option>
         <option value="fadeOut">Fade Out</option>
         <option value="fadeIn">Fade In</option>
         <option value="slideInTop">Slide In Top</option>
@@ -43,11 +44,15 @@ select {
 <div id="fx-element"></div>
 
 <script>
-var effect = 'fadeIn';
+var effect = 'move';
 var select = document.querySelector('select');
 var btn = document.querySelector('button');
 var el = document.querySelector('#fx-element');
 var anim = fx(el);
+
+function rand(min, max){
+    return Math.round(min+(Math.random()*(max-min)));
+}
 
 anim.on('done', function() {
     setTimeout(function() {
@@ -65,6 +70,9 @@ btn.addEventListener('click', animate);
 
 function animate() {
     switch (effect) {
+        case 'move':
+            anim.move(rand(100, 500), rand(100, 500));
+            break;
         case 'slideInTop':
             anim.slideIn('top');
             break;

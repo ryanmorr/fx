@@ -329,7 +329,6 @@ var FX = function () {
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
-         * @param {Promise}
          * @return {FX}
          * @api public
          */
@@ -423,7 +422,6 @@ var FX = function () {
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
-         * @param {Promise}
          * @return {FX}
          * @api public
          */
@@ -447,7 +445,6 @@ var FX = function () {
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
-         * @param {Promise}
          * @return {FX}
          * @api public
          */
@@ -472,7 +469,6 @@ var FX = function () {
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
-         * @param {Promise}
          * @return {FX}
          * @api public
          */
@@ -515,7 +511,6 @@ var FX = function () {
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
-         * @param {Promise}
          * @return {FX}
          * @api public
          */
@@ -549,6 +544,31 @@ var FX = function () {
             }
 
             return this.animate.apply(this, [props, duration, easing].concat(callbacks));
+        }
+
+        /**
+         * Move the element
+         *
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'move',
+        value: function move(x, y) {
+            var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 350;
+            var easing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'ease-in';
+
+            for (var _len6 = arguments.length, callbacks = Array(_len6 > 4 ? _len6 - 4 : 0), _key6 = 4; _key6 < _len6; _key6++) {
+                callbacks[_key6 - 4] = arguments[_key6];
+            }
+
+            return this.animate.apply(this, [{ translateX: x, translateY: y }, duration, easing].concat(callbacks));
         }
 
         /**
@@ -655,8 +675,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len6 = arguments.length, args = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
-                args[_key6 - 1] = arguments[_key6];
+            for (var _len7 = arguments.length, args = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
+                args[_key7 - 1] = arguments[_key7];
             }
 
             var callbacks = this.events[name];
