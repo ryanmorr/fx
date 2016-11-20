@@ -323,27 +323,6 @@ var FX = function () {
         }
 
         /**
-         * Called when an animation is compeleted
-         *
-         * @api private
-         */
-
-    }, {
-        key: 'complete',
-        value: function complete() {
-            if (this.isAnimating()) {
-                this.animating = false;
-                this.el.style.removeProperty('will-change');
-                this.resolve();
-                this.emit('done');
-                this.promise = this.resolve = null;
-                if (!this.queue.isEmpty()) {
-                    this.animate.apply(this, this.queue.dequeue());
-                }
-            }
-        }
-
-        /**
          * Animate the element
          *
          * @param {Object} props
@@ -439,6 +418,54 @@ var FX = function () {
         }
 
         /**
+         * Fade the element in
+         *
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @param {Promise}
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'fadeIn',
+        value: function fadeIn() {
+            var duration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 350;
+            var easing = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'ease-in';
+
+            for (var _len2 = arguments.length, callbacks = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+                callbacks[_key2 - 2] = arguments[_key2];
+            }
+
+            return this.animate.apply(this, [{ opacity: [0, 1] }, duration, easing].concat(callbacks));
+        }
+
+        /**
+         * Fade the element out
+         *
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @param {Promise}
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'fadeOut',
+        value: function fadeOut() {
+            var duration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 350;
+            var easing = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'ease-out';
+
+            for (var _len3 = arguments.length, callbacks = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+                callbacks[_key3 - 2] = arguments[_key3];
+            }
+
+            return this.animate.apply(this, [{ opacity: 0 }, duration, easing].concat(callbacks));
+        }
+
+        /**
          * Add a callback function for when
          * the current animation is completed
          *
@@ -511,6 +538,27 @@ var FX = function () {
         }
 
         /**
+         * Called when an animation is compeleted
+         *
+         * @api private
+         */
+
+    }, {
+        key: 'complete',
+        value: function complete() {
+            if (this.isAnimating()) {
+                this.animating = false;
+                this.el.style.removeProperty('will-change');
+                this.resolve();
+                this.emit('done');
+                this.promise = this.resolve = null;
+                if (!this.queue.isEmpty()) {
+                    this.animate.apply(this, this.queue.dequeue());
+                }
+            }
+        }
+
+        /**
          * Emit a custom event
          *
          * @param {String} name
@@ -521,8 +569,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                args[_key2 - 1] = arguments[_key2];
+            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+                args[_key4 - 1] = arguments[_key4];
             }
 
             var callbacks = this.events[name];

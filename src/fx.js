@@ -58,24 +58,6 @@ class FX {
     }
 
     /**
-     * Called when an animation is compeleted
-     *
-     * @api private
-     */
-    complete() {
-        if (this.isAnimating()) {
-            this.animating = false;
-            this.el.style.removeProperty('will-change');
-            this.resolve();
-            this.emit('done');
-            this.promise = this.resolve = null;
-            if (!this.queue.isEmpty()) {
-                this.animate.apply(this, this.queue.dequeue());
-            }
-        }
-    }
-
-    /**
      * Animate the element
      *
      * @param {Object} props
@@ -150,6 +132,34 @@ class FX {
     }
 
     /**
+     * Fade the element in
+     *
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @param {Promise}
+     * @return {FX}
+     * @api public
+     */
+    fadeIn(duration = 350, easing = 'ease-in', ...callbacks) {
+        return this.animate({opacity: [0, 1]}, duration, easing, ...callbacks);
+    }
+
+    /**
+     * Fade the element out
+     *
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @param {Promise}
+     * @return {FX}
+     * @api public
+     */
+    fadeOut(duration = 350, easing = 'ease-out', ...callbacks) {
+        return this.animate({opacity: 0}, duration, easing, ...callbacks);
+    }
+
+    /**
      * Add a callback function for when
      * the current animation is completed
      *
@@ -207,6 +217,24 @@ class FX {
         }
         this.events[name].push(fn);
         return this;
+    }
+
+    /**
+     * Called when an animation is compeleted
+     *
+     * @api private
+     */
+    complete() {
+        if (this.isAnimating()) {
+            this.animating = false;
+            this.el.style.removeProperty('will-change');
+            this.resolve();
+            this.emit('done');
+            this.promise = this.resolve = null;
+            if (!this.queue.isEmpty()) {
+                this.animate.apply(this, this.queue.dequeue());
+            }
+        }
     }
 
     /**

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Easing Example</title>
+    <script src="../dist/fx.js"></script>
+</head>
+<body>
+
+<style>
+select {
+    vertical-align: middle;
+    margin: 0 15px;
+}
+
+#fx-element {
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<section>
+    <label>Effect:</label>
+    <select>
+        <option value="fadeOut">Fade Out</option>
+        <option value="fadeIn">Fade In</option>
+    </select>
+    <button>Animate</button>
+</section>
+
+<div id="fx-element"></div>
+
+<script>
+var effect = 'fadeIn';
+var select = document.querySelector('select');
+var btn = document.querySelector('button');
+var el = document.querySelector('#fx-element');
+var anim = fx(el);
+
+select.addEventListener('change', function() {
+    effect = select.options[select.selectedIndex].value;
+});
+
+btn.addEventListener('click', animate);
+
+function animate() {
+    anim[effect]();
+}
+
+</script>
+
+</body>
+</html>
