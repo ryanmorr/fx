@@ -466,6 +466,92 @@ var FX = function () {
         }
 
         /**
+         * Slide and fade the element in
+         *
+         * @param {String} direction (optional)
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @param {Promise}
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'slideIn',
+        value: function slideIn() {
+            var direction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'top';
+            var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 350;
+            var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'ease-in';
+
+            var props = void 0;
+            switch (direction) {
+                case 'left':
+                    props = { translateX: ['-100%', 0], opacity: [0, 1] };
+                    break;
+                case 'right':
+                    props = { translateX: ['100%', 0], opacity: [0, 1] };
+                    break;
+                case 'bottom':
+                    props = { translateY: ['100%', 0], opacity: [0, 1] };
+                    break;
+                case 'top':
+                default:
+                    props = { translateY: ['-100%', 0], opacity: [0, 1] };
+                    break;
+            }
+
+            for (var _len4 = arguments.length, callbacks = Array(_len4 > 3 ? _len4 - 3 : 0), _key4 = 3; _key4 < _len4; _key4++) {
+                callbacks[_key4 - 3] = arguments[_key4];
+            }
+
+            return this.animate.apply(this, [props, duration, easing].concat(callbacks));
+        }
+
+        /**
+         * Slide and fade the element out
+         *
+         * @param {String} direction (optional)
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @param {Promise}
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'slideOut',
+        value: function slideOut() {
+            var direction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'bottom';
+            var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 350;
+            var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'ease-out';
+
+            var props = void 0;
+            switch (direction) {
+                case 'left':
+                    props = { translateX: '-100%', opacity: 0 };
+                    break;
+                case 'right':
+                    props = { translateX: '100%', opacity: 0 };
+                    break;
+                case 'top':
+                    props = { translateY: '-100%', opacity: 0 };
+                    break;
+                case 'bottom':
+                default:
+                    props = { translateY: '100%', opacity: 0 };
+                    break;
+            }
+
+            for (var _len5 = arguments.length, callbacks = Array(_len5 > 3 ? _len5 - 3 : 0), _key5 = 3; _key5 < _len5; _key5++) {
+                callbacks[_key5 - 3] = arguments[_key5];
+            }
+
+            return this.animate.apply(this, [props, duration, easing].concat(callbacks));
+        }
+
+        /**
          * Add a callback function for when
          * the current animation is completed
          *
@@ -569,8 +655,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-                args[_key4 - 1] = arguments[_key4];
+            for (var _len6 = arguments.length, args = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
+                args[_key6 - 1] = arguments[_key6];
             }
 
             var callbacks = this.events[name];

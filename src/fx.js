@@ -160,6 +160,68 @@ class FX {
     }
 
     /**
+     * Slide and fade the element in
+     *
+     * @param {String} direction (optional)
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @param {Promise}
+     * @return {FX}
+     * @api public
+     */
+    slideIn(direction = 'top', duration = 350, easing = 'ease-in', ...callbacks) {
+        let props;
+        switch (direction) {
+            case 'left':
+                props = {translateX: ['-100%', 0], opacity: [0, 1]};
+                break;
+            case 'right':
+                props = {translateX: ['100%', 0], opacity: [0, 1]};
+                break;
+            case 'bottom':
+                props = {translateY: ['100%', 0], opacity: [0, 1]};
+                break;
+            case 'top':
+            default:
+                props = {translateY: ['-100%', 0], opacity: [0, 1]};
+                break;
+        }
+        return this.animate(props, duration, easing, ...callbacks);
+    }
+
+    /**
+     * Slide and fade the element out
+     *
+     * @param {String} direction (optional)
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @param {Promise}
+     * @return {FX}
+     * @api public
+     */
+    slideOut(direction = 'bottom', duration = 350, easing = 'ease-out', ...callbacks) {
+        let props;
+        switch (direction) {
+            case 'left':
+                props = {translateX: '-100%', opacity: 0};
+                break;
+            case 'right':
+                props = {translateX: '100%', opacity: 0};
+                break;
+            case 'top':
+                props = {translateY: '-100%', opacity: 0};
+                break;
+            case 'bottom':
+            default:
+                props = {translateY: '100%', opacity: 0};
+                break;
+        }
+        return this.animate(props, duration, easing, ...callbacks);
+    }
+
+    /**
      * Add a callback function for when
      * the current animation is completed
      *
