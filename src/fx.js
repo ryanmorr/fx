@@ -3,7 +3,7 @@
  */
 import Queue from './queue';
 import easingFunctions from './easing';
-import { getProperties, setProperties } from './props';
+import { getProperties, setProperties, getStyle } from './props';
 import { isArray } from './util';
 
 /**
@@ -219,16 +219,33 @@ class FX {
     /**
      * Move the element
      *
-     * @param {Number} x
-     * @param {Number} y
+     * @param {Number|String} x
+     * @param {Number|String} y
      * @param {Number} duration (optional)
      * @param {String} easing (optional)
      * @param {...Function} callbacks (optional)
      * @return {FX}
      * @api public
      */
-    move(x, y, duration = 350, easing = 'ease-in', ...callbacks) {
+    move(x, y, duration = 350, easing = 'ease-in-out', ...callbacks) {
         return this.animate({translateX: x, translateY: y}, duration, easing, ...callbacks);
+    }
+
+    /**
+     * Highlight the element
+     *
+     * @param {String} color (optional)
+     * @param {String} prop (optional)
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @return {FX}
+     * @api public
+     */
+    highlight(color = '#ffff9c', prop = 'backgroundColor',
+              duration = 700, easing = 'ease-in-out', ...callbacks) {
+        const to = getStyle(this.el, prop);
+        return this.animate({[prop]: [color, to]}, duration, easing, ...callbacks);
     }
 
     /**

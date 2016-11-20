@@ -144,20 +144,6 @@ function getStartValue(el, prop, end, units) {
 }
 
 /**
- * Get the computed value of a style
- * property for an element
- *
- * @param {Element} el
- * @param {String} prop
- * @return {String}
- * @api private
- */
-function getStyle(el, prop) {
-    const style = el.ownerDocument.defaultView.getComputedStyle(el, null);
-    return prop in style ? style[prop] : null;
-}
-
-/**
  * Set the value of an element's
  * style property
  *
@@ -168,6 +154,20 @@ function getStyle(el, prop) {
  */
 function setStyle(el, prop, value) {
     el.style[prop] = value;
+}
+
+/**
+ * Get the computed value of a style
+ * property for an element
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @return {String}
+ * @api private
+ */
+export function getStyle(el, prop) {
+    const style = el.ownerDocument.defaultView.getComputedStyle(el, null);
+    return prop in style ? style[prop] : null;
 }
 
 /**

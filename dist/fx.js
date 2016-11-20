@@ -259,6 +259,8 @@ var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -549,8 +551,8 @@ var FX = function () {
         /**
          * Move the element
          *
-         * @param {Number} x
-         * @param {Number} y
+         * @param {Number|String} x
+         * @param {Number|String} y
          * @param {Number} duration (optional)
          * @param {String} easing (optional)
          * @param {...Function} callbacks (optional)
@@ -562,13 +564,42 @@ var FX = function () {
         key: 'move',
         value: function move(x, y) {
             var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 350;
-            var easing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'ease-in';
+            var easing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'ease-in-out';
 
             for (var _len6 = arguments.length, callbacks = Array(_len6 > 4 ? _len6 - 4 : 0), _key6 = 4; _key6 < _len6; _key6++) {
                 callbacks[_key6 - 4] = arguments[_key6];
             }
 
             return this.animate.apply(this, [{ translateX: x, translateY: y }, duration, easing].concat(callbacks));
+        }
+
+        /**
+         * Highlight the element
+         *
+         * @param {String} color (optional)
+         * @param {String} prop (optional)
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'highlight',
+        value: function highlight() {
+            var color = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '#ffff9c';
+            var prop = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'backgroundColor';
+            var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 700;
+            var easing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'ease-in-out';
+
+            var to = (0, _props.getStyle)(this.el, prop);
+
+            for (var _len7 = arguments.length, callbacks = Array(_len7 > 4 ? _len7 - 4 : 0), _key7 = 4; _key7 < _len7; _key7++) {
+                callbacks[_key7 - 4] = arguments[_key7];
+            }
+
+            return this.animate.apply(this, [_defineProperty({}, prop, [color, to]), duration, easing].concat(callbacks));
         }
 
         /**
@@ -675,8 +706,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len7 = arguments.length, args = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
-                args[_key7 - 1] = arguments[_key7];
+            for (var _len8 = arguments.length, args = Array(_len8 > 1 ? _len8 - 1 : 0), _key8 = 1; _key8 < _len8; _key8++) {
+                args[_key8 - 1] = arguments[_key8];
             }
 
             var callbacks = this.events[name];
@@ -718,6 +749,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           */
 
 
+exports.getStyle = getStyle;
 exports.getProperties = getProperties;
 exports.setProperties = setProperties;
 
@@ -846,6 +878,19 @@ function getStartValue(el, prop, end, units) {
 }
 
 /**
+ * Set the value of an element's
+ * style property
+ *
+ * @param {Element} el
+ * @param {String} prop
+ * @param {String} value
+ * @api private
+ */
+function setStyle(el, prop, value) {
+    el.style[prop] = value;
+}
+
+/**
  * Get the computed value of a style
  * property for an element
  *
@@ -857,19 +902,6 @@ function getStartValue(el, prop, end, units) {
 function getStyle(el, prop) {
     var style = el.ownerDocument.defaultView.getComputedStyle(el, null);
     return prop in style ? style[prop] : null;
-}
-
-/**
- * Set the value of an element's
- * style property
- *
- * @param {Element} el
- * @param {String} prop
- * @param {String} value
- * @api private
- */
-function setStyle(el, prop, value) {
-    el.style[prop] = value;
 }
 
 /**
