@@ -232,6 +232,20 @@ class FX {
     }
 
     /**
+     * Scale the element
+     *
+     * @param {Number} value
+     * @param {Number} duration (optional)
+     * @param {String} easing (optional)
+     * @param {...Function} callbacks (optional)
+     * @return {FX}
+     * @api public
+     */
+    scale(percent, duration = 350, easing = 'ease-in-out', ...callbacks) {
+        return this.animate({scale: percent / 100}, duration, easing, ...callbacks);
+    }
+
+    /**
      * Highlight the element
      *
      * @param {String} color (optional)

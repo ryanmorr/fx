@@ -27,6 +27,7 @@ select {
     <label>Effect:</label>
     <select>
         <option value="move">Move</option>
+        <option value="scale">Scale</option>
         <option value="highlight">Highlight</option>
         <option value="fadeOut">Fade Out</option>
         <option value="fadeIn">Fade In</option>
@@ -51,10 +52,6 @@ var btn = document.querySelector('button');
 var el = document.querySelector('#fx-element');
 var anim = fx(el);
 
-function rand(min, max){
-    return Math.round(min+(Math.random()*(max-min)));
-}
-
 anim.on('done', function() {
     setTimeout(function() {
         el.style.removeProperty('transform');
@@ -72,7 +69,10 @@ btn.addEventListener('click', animate);
 function animate() {
     switch (effect) {
         case 'move':
-            anim.move(rand(100, 500), rand(100, 500));
+            anim.move(200, 300);
+            break;
+        case 'scale':
+            anim.scale(180);
             break;
         case 'slideInTop':
             anim.slideIn('top');

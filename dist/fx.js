@@ -574,6 +574,30 @@ var FX = function () {
         }
 
         /**
+         * Scale the element
+         *
+         * @param {Number} value
+         * @param {Number} duration (optional)
+         * @param {String} easing (optional)
+         * @param {...Function} callbacks (optional)
+         * @return {FX}
+         * @api public
+         */
+
+    }, {
+        key: 'scale',
+        value: function scale(percent) {
+            var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 350;
+            var easing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'ease-in-out';
+
+            for (var _len7 = arguments.length, callbacks = Array(_len7 > 3 ? _len7 - 3 : 0), _key7 = 3; _key7 < _len7; _key7++) {
+                callbacks[_key7 - 3] = arguments[_key7];
+            }
+
+            return this.animate.apply(this, [{ scale: percent / 100 }, duration, easing].concat(callbacks));
+        }
+
+        /**
          * Highlight the element
          *
          * @param {String} color (optional)
@@ -595,8 +619,8 @@ var FX = function () {
 
             var to = (0, _props.getStyle)(this.el, prop);
 
-            for (var _len7 = arguments.length, callbacks = Array(_len7 > 4 ? _len7 - 4 : 0), _key7 = 4; _key7 < _len7; _key7++) {
-                callbacks[_key7 - 4] = arguments[_key7];
+            for (var _len8 = arguments.length, callbacks = Array(_len8 > 4 ? _len8 - 4 : 0), _key8 = 4; _key8 < _len8; _key8++) {
+                callbacks[_key8 - 4] = arguments[_key8];
             }
 
             return this.animate.apply(this, [_defineProperty({}, prop, [color, to]), duration, easing].concat(callbacks));
@@ -706,8 +730,8 @@ var FX = function () {
     }, {
         key: 'emit',
         value: function emit(name) {
-            for (var _len8 = arguments.length, args = Array(_len8 > 1 ? _len8 - 1 : 0), _key8 = 1; _key8 < _len8; _key8++) {
-                args[_key8 - 1] = arguments[_key8];
+            for (var _len9 = arguments.length, args = Array(_len9 > 1 ? _len9 - 1 : 0), _key9 = 1; _key9 < _len9; _key9++) {
+                args[_key9 - 1] = arguments[_key9];
             }
 
             var callbacks = this.events[name];
