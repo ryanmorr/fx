@@ -47,6 +47,7 @@ select {
 
 <script>
 var effect = 'move';
+var ready = true;
 var select = document.querySelector('select');
 var btn = document.querySelector('button');
 var el = document.querySelector('#fx-element');
@@ -57,6 +58,7 @@ anim.on('done', function() {
         el.style.removeProperty('transform');
         el.style.removeProperty('webkit-transform');
         el.style.opacity = 1;
+        ready = true;
     }, 1000);
 });
 
@@ -67,39 +69,42 @@ select.addEventListener('change', function() {
 btn.addEventListener('click', animate);
 
 function animate() {
-    switch (effect) {
-        case 'move':
-            anim.move(200, 300);
-            break;
-        case 'scale':
-            anim.scale(180);
-            break;
-        case 'slideInTop':
-            anim.slideIn('top');
-            break;
-        case 'slideInLeft':
-            anim.slideIn('left');
-            break;
-        case 'slideInRight':
-            anim.slideIn('right');
-            break;
-        case 'slideInBottom':
-            anim.slideIn('bottom');
-            break;
-        case 'slideOutTop':
-            anim.slideOut('top');
-            break;
-        case 'slideOutLeft':
-            anim.slideOut('left');
-            break;
-        case 'slideOutRight':
-            anim.slideOut('right');
-            break;
-        case 'slideOutBottom':
-            anim.slideOut('bottom');
-            break;
-        default:
-            anim[effect]();
+    if (ready) {
+        ready = false;
+        switch (effect) {
+            case 'move':
+                anim.move(200, 300);
+                break;
+            case 'scale':
+                anim.scale(180);
+                break;
+            case 'slideInTop':
+                anim.slideIn('top');
+                break;
+            case 'slideInLeft':
+                anim.slideIn('left');
+                break;
+            case 'slideInRight':
+                anim.slideIn('right');
+                break;
+            case 'slideInBottom':
+                anim.slideIn('bottom');
+                break;
+            case 'slideOutTop':
+                anim.slideOut('top');
+                break;
+            case 'slideOutLeft':
+                anim.slideOut('left');
+                break;
+            case 'slideOutRight':
+                anim.slideOut('right');
+                break;
+            case 'slideOutBottom':
+                anim.slideOut('bottom');
+                break;
+            default:
+                anim[effect]();
+        }
     }
 }
 
