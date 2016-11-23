@@ -54,7 +54,7 @@ const animation = fx('#foo');
 
 ### fx#animate(properties[, duration, easing, ...callbacks])
 
-Start an animation by providing an object that maps CSS properties to the value it should be animated to. Optionally provide a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
+Start an animation by providing an object that maps CSS properties (in camel-cased format) to the value it should be animated to. Optionally provide a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
 
 ```javascript
 fx('#foo').animate({
