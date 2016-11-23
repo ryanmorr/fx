@@ -1,10 +1,16 @@
 # fx
 
+[![Version Badge][version-image]][project-url]
+[![Build Status][build-image]][build-url]
+[![Dependencies][dependencies-image]][project-url]
+[![License][license-image]][license-url]
+[![File Size][file-size-image]][project-url]
+
 > A lightweight and standalone JavaScript animation library
 
 ## Usage
 
-Perform tweens on almost all CSS properties, including transforms, colors, and scroll position. Additionally supports CSS units, transitional easing functions, effects, queued animations, custom events, and promise-style callbacks:
+Perform animations on almost all CSS properties, including transforms, colors, and scroll position. Additionally supports CSS units, transitional easing functions, effects, queued animations, custom events, and promise-style callbacks:
 
 ```javascript
 import fx from 'fx';
@@ -176,3 +182,12 @@ bower install ryanmorr/fx
 ## License
 
 This project is dedicated to the public domain as described by the [Unlicense](http://unlicense.org/).
+
+[project-url]: https://github.com/ryanmorr/fx
+[version-image]: https://badge.fury.io/gh/ryanmorr%2Ffx.svg
+[build-url]: https://travis-ci.org/ryanmorr/fx
+[build-image]: https://travis-ci.org/ryanmorr/fx.svg
+[dependencies-image]: https://david-dm.org/ryanmorr/fx.svg
+[license-image]: https://img.shields.io/badge/license-Unlicense-blue.svg
+[license-url]: UNLICENSE
+[file-size-image]: https://badge-size.herokuapp.com/ryanmorr/fx/master/dist/fx.min.js.svg?color=blue&label=file%20size
