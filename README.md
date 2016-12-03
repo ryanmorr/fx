@@ -105,7 +105,7 @@ fx('#foo').scale(150);
 Highlight an element by flashing a color. Optionally provide the color in RGB or hex format (defaults to "#ffff9c"), the color property to animate (defaults to `backgroundColor`), a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
 
 ```javascript
-fx('#foo').highlight('#FF0000', 'color');
+fx('#foo').highlight('#FF0000', 'borderColor');
 ```
 
 ### fx#then(fn)
