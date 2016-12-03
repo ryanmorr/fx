@@ -17,11 +17,12 @@ import fx from 'fx';
 
 // Start a new animation
 fx('#foo').animate({
-    width: 100,
-    height: '3em',
-    translateX: '100%',
-    translateY: [10, 60],
-    backgroundColor: '#FF0000',
+    width: 100, // Uses pixels as default CSS unit
+    height: '3em', // Explicitly define any CSS unit to use instead
+    top: [50, 100], // Provide an array to define the starting point for an animation ([from, to])
+    scale: 0.5, // Supports CSS transforms
+    scrollLeft: 100, // Supports scrolling
+    backgroundColor: '#FF0000', // Supports colors
 });
 
 // Provide a duration, easing function, and add a callback function
@@ -31,15 +32,6 @@ fx(element).animate({scrollTop: 100}, 1000, 'ease-in-expo').then(() => {
 
 // Queue multiple effects
 fx('#bar').fadeIn().scale(100).fadeOut();
-
-// Subscribe to custom events
-fx(el).on('start', () => {
-    console.log('Animation started');
-}).on('tick', (progress) => {
-    console.log('Animation progress:' + progress + '%');
-}).on('done', () => {
-    console.log('Animation completed');
-});
 ```
 
 ## API
@@ -57,14 +49,7 @@ const animation = fx('#foo');
 Start an animation by providing an object that maps CSS properties (in camel-cased format) to the value it should be animated to. Optionally provide a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
 
 ```javascript
-fx('#foo').animate({
-    width: 100, // Uses pixels as default CSS unit
-    height: '3em', // Explicitly define any CSS unit to use instead
-    top: [50, 100], // Provide an array to define the starting point for an animation ([from, to])
-    scale: 0.5, // Supports CSS transforms
-    scrollLeft: 100, // Supports scrolling
-    backgroundColor: '#FF0000', // Supports colors
-}, 1000, 'ease-out-circ');
+fx('#foo').animate({width: 100, height: 100}, 1000, 'ease-out-circ');
 ```
 
 ### fx#fadeIn([duration, easing, ...callbacks])
@@ -143,7 +128,7 @@ fx('#foo').fadeIn().stop();
 
 ### fx#on(name, fn)
 
-Subscribe a callback function to one of the custom events:
+Subscribe a callback function to one of the custom events (start, tick, and done):
 
 ```javascript
 const animation = fx(element);
