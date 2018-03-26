@@ -118,7 +118,7 @@ fx('#foo').fadeIn().then(() => {
 });
 ```
 
-### fx#stop(fn)
+### fx#stop()
 
 Stop the currently running animation:
 
