@@ -1,9 +1,3 @@
-/* eslint-disable max-len */
-
-/**
- * Robert Penner's easing functions
- * http://robertpenner.com/easing/
- */
 const easingFunctions = {
 
     linear(t, b, c, d) {
@@ -234,14 +228,8 @@ const easingFunctions = {
     }
 };
 
-/**
- * Create shortcut for default easing functions
- */
 easingFunctions['ease-in'] = easingFunctions['ease-in-quart'];
 easingFunctions['ease-out'] = easingFunctions['ease-out-quart'];
 easingFunctions['ease-in-out'] = easingFunctions['ease-in-out-quart'];
 
-/**
- * Export easing functions
- */
 export default easingFunctions;

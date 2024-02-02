@@ -1,11 +1,5 @@
-/**
- * Import dependencies
- */
 import { isArray, includes } from './util';
 
-/**
- * Common variables
- */
 const has = {}.hasOwnProperty;
 const kebabRe = /([a-z])([A-Z])/g;
 const valueRe = /([\+\-]?[0-9|auto\.]+)(%|\w+)?/;
@@ -14,9 +8,6 @@ const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 const cache = Object.create(null);
 
-/**
- * Supported transform properties
- */
 const transformProps = [
     'translateX',
     'translateY',
@@ -33,10 +24,6 @@ const transformProps = [
     'skewY'
 ];
 
-/**
- * Feature test for the supported
- * `transform` property
- */
 const [transformProp, transformCSSProp] = (() => {
     if ('transform' in document.documentElement.style) {
         return ['transform', 'transform'];
@@ -44,14 +31,6 @@ const [transformProp, transformCSSProp] = (() => {
     return ['webkitTransform', 'webkit-transform'];
 })();
 
-/**
- * Convert a camel-cased CSS property
- * to kebab-case (hyphenated)
- *
- * @param {String} prop
- * @return {String}
- * @api private
- */
 function toKebabCase(prop) {
     if (prop in cache) {
         return cache[prop];
@@ -61,14 +40,6 @@ function toKebabCase(prop) {
     return value;
 }
 
-/**
- * Parse a CSS color hex and rgb value
- * to extract the numberic codes
- *
- * @param {String} str
- * @return {Array}
- * @api private
- */
 function parseColor(str) {
     if (str in cache) {
         return cache[str];
@@ -105,15 +76,6 @@ function parseColor(str) {
     }
 }
 
-/**
- * Get the value and units of a
- * CSS property
- *
- * @param {String} prop
- * @param {String} style
- * @return {Array}
- * @api private
- */
 function getValue(prop, style) {
     const match = valueRe.exec(style);
     let units = match[2] || '';
@@ -123,16 +85,6 @@ function getValue(prop, style) {
     return [parseFloat(match[1]) || 0, units];
 }
 
-/**
- * Determine the start point for
- * the element
- *
- * @param {Element} el
- * @param {String} prop
- * @param {String} end
- * @param {String} units
- * @return {Number}
- */
 function getStartValue(el, prop, end, units) {
     let start = parseFloat(getStyle(el, prop)) || 0;
     if (units !== 'px') {
@@ -143,42 +95,15 @@ function getStartValue(el, prop, end, units) {
     return start;
 }
 
-/**
- * Set the value of an element's
- * style property
- *
- * @param {Element} el
- * @param {String} prop
- * @param {String} value
- * @api private
- */
 function setStyle(el, prop, value) {
     el.style[prop] = value;
 }
 
-/**
- * Get the computed value of a style
- * property for an element
- *
- * @param {Element} el
- * @param {String} prop
- * @return {String}
- * @api private
- */
 export function getStyle(el, prop) {
     const style = el.ownerDocument.defaultView.getComputedStyle(el, null);
     return prop in style ? style[prop] : null;
 }
 
-/**
- * Get the starting and ending values
- * for each property of an animation
- *
- * @param {Element} el
- * @param {Object} props
- * @return {Array}
- * @api private
- */
 export function getProperties(el, props) {
     const startProps = Object.create(null);
     const endProps = Object.create(null);
@@ -227,15 +152,6 @@ export function getProperties(el, props) {
     return [startProps, endProps, units, willChange];
 }
 
-/**
- * Set multiple style properties for
- * an element
- *
- * @param {Element} el
- * @param {Object} props
- * @param {Object} units
- * @api private
- */
 export function setProperties(el, props, units) {
     let prop, value;
     for (prop in props) {
