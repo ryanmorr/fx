@@ -1,6 +1,6 @@
 const defaultProps = {
     duration: 1000,
-    easing: 'linear'
+    easing: 'ease-in-out'
 };
 
 const easingFunctions = {
@@ -11,6 +11,9 @@ const easingFunctions = {
 };
 
 function calculateEase(ease, start, end, percentage) {
+    if (Array.isArray(start)) {
+        return start.map((val, i) => calculateEase(ease, val, end[i], percentage));
+    }
     return start + (end - start) * ease(percentage);
 }
 
@@ -62,9 +65,9 @@ function getValues(el, props) {
             endValues[prop] = to;
         } else {
             const [value, unit] = splitUnits(to);
-            from = from == null ? parseFloat(getComputedStyle(el)[prop]) || 0 : splitUnits(from)[0];
-            startValues[prop] = from;
-            endValues[prop] = value;
+            from = from == null ? getComputedStyle(el)[prop] || 0 : splitUnits(from)[0];
+            startValues[prop] = parseFloat(from);
+            endValues[prop] = parseFloat(value);
             units[prop] = unit;
         }
     }
@@ -105,11 +108,7 @@ export default function fx(target, props) {
             const currentTime = Math.min(timestamp - startTime, duration);
             const percentage = currentTime / duration;
             for (const prop in startValues) {
-                const start = startValues[prop];
-                const end = endValues[prop];
-                const unit = units[prop];
-                const value = Array.isArray(start) ? start.map((val, i) => calculateEase(ease, val, end[i], percentage)) : calculateEase(ease, start, end, percentage);
-                setProperty(el, prop, value, unit);
+                setProperty(el, prop, calculateEase(ease, startValues[prop], endValues[prop], percentage), units[prop]);
             }
             if (percentage < 1) {
                 requestAnimationFrame(tick);
