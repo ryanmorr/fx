@@ -2,8 +2,11 @@ const cache = {};
 const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
-const defaultDuration = 1000;
-const defaultEasing = 'linear';
+
+const defaultProps = {
+    duration: 1000,
+    easing: 'linear'
+};
 
 const easingFunctions = {
     'linear': (t) => t,
@@ -105,8 +108,9 @@ function setProperty(el, prop, value, unit) {
     }
 }
 
-export default function fx(el, props, duration = defaultDuration, easing = defaultEasing) {
-    el = typeof el === 'string' ? document.querySelector(el) : el;
+export default function fx(target, props) {
+    const el = typeof target === 'string' ? document.querySelector(target) : target;
+    const {duration, easing} = Object.assign(defaultProps, props);
     return new Promise((resolve) => {
         let startTime;
         const ease = easingFunctions[easing];
