@@ -12,6 +12,10 @@ const easingFunctions = {
     'ease-in-out': (t) =>  .5 * (Math.sin((t - .5) * Math.PI) + 1)
 };
 
+function calculateEase(ease, start, end, percentage) {
+    return start + (end - start) * ease(percentage);
+}
+
 function splitUnits(val) {
     if (typeof val === 'number') {
         return [val, 'px'];
@@ -117,15 +121,8 @@ export default function fx(el, props, duration = defaultDuration, easing = defau
                 const start = startValues[prop];
                 const end = endValues[prop];
                 const unit = units[prop];
-                if (Array.isArray(start)) {
-                    for (let i = 0, len = start.length; i < len; i++) {
-                        const value = start[i] + (end[i] - start[i]) * ease(percentage); 
-                        setProperty(el, prop, value, unit);
-                    }
-                } else {
-                   const value = start + (end - start) * ease(percentage); 
-                   setProperty(el, prop, value, unit);
-                }
+                const value = Array.isArray(start) ? start.map((val, i) => calculateEase(ease, val, end[i], percentage)) : calculateEase(ease, start, end, percentage);
+                setProperty(el, prop, value, unit);
             }
             if (percentage < 1) {
                 requestAnimationFrame(tick);
