@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Scroll Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    width: 300px;
+    height: 300px;
+    border: 1px solid #ccc;
+    overflow-y: scroll;
+}
+
+#fx-element::before {
+    content: '';
+    display: block;
+    height: 1000px;
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+fx('#fx-element', {scrollTop: 200});
+</script>
+
+</body>
+</html>
