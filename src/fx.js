@@ -1,8 +1,3 @@
-const cache = {};
-const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
-const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
-const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
-
 const defaultProps = {
     duration: 1000,
     easing: 'linear'
@@ -26,40 +21,28 @@ function splitUnits(val) {
     return /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/.exec(val);
 }
 
-function parseColor(str) {
-    if (str in cache) {
-        return cache[str];
-    }
-    let color = str.match(hex6Re), value;
-    if (color && color.length === 4) {
-        value = [
-            parseInt(color[1], 16),
-            parseInt(color[2], 16),
-            parseInt(color[3], 16)
+function isColor(prop) {
+    return prop.toLowerCase().includes('color');
+}
+
+function parseColor(color) {
+    if (color.startsWith('rgb')) {
+        const match = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*(\d{1,3}))?\)$/.exec(color);
+        return [
+            parseInt(match[1], 10),
+            parseInt(match[2], 10),
+            parseInt(match[3], 10),
+            match[4] == null ? 1 : match[4]
         ];
-        cache[str] = value;
-        return value;
     }
-    color = str.match(rgbRe);
-    if (color && color.length === 4) {
-        value = [
-            parseInt(color[1], 10),
-            parseInt(color[2], 10),
-            parseInt(color[3], 10)
-        ];
-        cache[str] = value;
-        return value;
-    }
-    color = str.match(hex3Re);
-    if (color && color.length === 4) {
-        value = [
-            parseInt(color[1] + color[1], 16),
-            parseInt(color[2] + color[2], 16),
-            parseInt(color[3] + color[3], 16)
-        ];
-        cache[str] = value;
-        return value;
-    }
+    const hex = color.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (m, r, g, b) => r + r + g + g + b + b);
+    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return [
+        parseInt(match[1], 16),
+        parseInt(match[2], 16),
+        parseInt(match[3], 16),
+        1
+    ];
 }
 
 function getValues(el, props) {
@@ -69,7 +52,7 @@ function getValues(el, props) {
     for (const prop in props) {
         const value = props[prop];
         let [from, to] = Array.isArray(value) ? value : [null, value];
-        if (prop.toLowerCase().includes('color')) {
+        if (isColor(prop)) {
             from = from == null ? getComputedStyle(el)[prop] : from;
             startValues[prop] = parseColor(from);
             endValues[prop] = parseColor(to);
@@ -99,8 +82,8 @@ function setProperty(el, prop, value, unit) {
             break;
         default:
             if (prop in el.style) {
-                if (prop.toLowerCase().includes('color')) {
-                    el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])})`;
+                if (isColor(prop)) {
+                    el.style[prop] = `rgba(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
                 } else {
                     el.style[prop] = value + unit;
                 }
