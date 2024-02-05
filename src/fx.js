@@ -1,5 +1,4 @@
 const cache = {};
-const valueRe = /([+-]?[0-9|auto.]+)(%|\w+)?/;
 const hex6Re = /^#?(\w{2})(\w{2})(\w{2})$/;
 const hex3Re = /^#?(\w{1})(\w{1})(\w{1})$/;
 const rgbRe = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
@@ -12,6 +11,13 @@ const easingFunctions = {
     'ease-out': (t) =>  1 - Math.pow(1 - t, 1.675),
     'ease-in-out': (t) =>  .5 * (Math.sin((t - .5) * Math.PI) + 1)
 };
+
+function splitUnits(val) {
+    if (typeof val === 'number') {
+        return [val, 'px'];
+    }
+    return /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/.exec(val);
+}
 
 function parseColor(str) {
     if (str in cache) {
@@ -49,115 +55,78 @@ function parseColor(str) {
     }
 }
 
-function getValue(prop, style) {
-    const match = valueRe.exec(style);
-    let units = match[2] || '';
-    if (!units && prop.indexOf('scale') === -1) {
-        units = (prop.indexOf('rotate') > -1 || prop.indexOf('skew') > -1) ? 'deg' : 'px';
-    }
-    return [parseFloat(match[1]) || 0, units];
-}
-
-function getStartValue(el, prop, end, units) {
-    let start = parseFloat(getStyle(el, prop)) || 0;
-    if (units !== 'px') {
-        setStyle(el, prop, (end || 1) + units);
-        start = ((end || 1) / parseFloat(getStyle(el, prop))) * start;
-        setStyle(el, prop, start + units);
-    }
-    return start;
-}
-
-function setStyle(el, prop, value) {
-    el.style[prop] = value;
-}
-
-function getStyle(el, prop) {
-    const style = el.ownerDocument.defaultView.getComputedStyle(el, null);
-    return prop in style ? style[prop] : null;
-}
-
-function getProperties(el, props) {
-    const startProps = {};
-    const endProps = {};
+function getValues(el, props) {
+    const startValues = {};
+    const endValues = {};
     const units = {};
-    let prop, value, to, from;
-    for (prop in props) {
-        value = props[prop];
-        [from, to] = Array.isArray(value) ? value : [null, value];
+    for (const prop in props) {
+        const value = props[prop];
+        let [from, to] = Array.isArray(value) ? value : [null, value];
         if (prop.toLowerCase().includes('color')) {
-            from = from == null ? getStyle(el, prop) : from;
-            startProps[prop] = parseColor(from);
-            endProps[prop] = parseColor(to);
+            from = from == null ? getComputedStyle(el)[prop] : from;
+            startValues[prop] = parseColor(from);
+            endValues[prop] = parseColor(to);
         } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
             from = from == null ? el[prop] : from;
-            startProps[prop] = from;
-            endProps[prop] = to;
-        } else if (prop in el.style) {
-            const [value, unit] = getValue(prop, to);
-            from = from == null ? getStartValue(el, prop, value, unit) : getValue(from)[0];
-            startProps[prop] = from;
-            endProps[prop] = value;
-            units[prop] = unit;
+            startValues[prop] = from;
+            endValues[prop] = to;
         } else {
-            startProps[prop] = 0;
-            endProps[prop] = to;
+            const [value, unit] = splitUnits(to);
+            from = from == null ? parseFloat(getComputedStyle(el)[prop]) || 0 : splitUnits(from)[0];
+            startValues[prop] = from;
+            endValues[prop] = value;
+            units[prop] = unit;
         }
     }
-    return [startProps, endProps, units];
+    return [startValues, endValues, units];
 }
 
-function setProperties(el, props, units) {
-    let prop, value;
-    for (prop in props) {
-        value = props[prop];
-        switch (prop) {
-            case 'opacity':
-                setStyle(el, prop, value);
-                break;
-            case 'scrollTop':
-            case 'scrollLeft':
-                el[prop] = value;
-                break;
-            default:
-                if (prop in el.style) {
-                    if (prop.toLowerCase().includes('color')) {
-                        setStyle(el, prop, `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])})`);
-                    } else {
-                        const unit = units[prop];
-                        setStyle(el, prop, value + unit);
-                    }
+function setProperty(el, prop, value, unit) {
+    switch (prop) {
+        case 'opacity':
+            el.style[prop] = value;
+            break;
+        case 'scrollTop':
+        case 'scrollLeft':
+            el[prop] = value;
+            break;
+        default:
+            if (prop in el.style) {
+                if (prop.toLowerCase().includes('color')) {
+                    el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])})`;
+                } else {
+                    el.style[prop] = value + unit;
                 }
-        }
+            }
     }
 }
 
 export default function fx(el, props, duration = defaultDuration, easing = defaultEasing) {
     el = typeof el === 'string' ? document.querySelector(el) : el;
     return new Promise((resolve) => {
-        const frame = {};
-        const ease = easingFunctions[easing];
-        const [startProps, endProps, units] = getProperties(el, props);
         let startTime;
+        const ease = easingFunctions[easing];
+        const [startValues, endValues, units] = getValues(el, props);
         const tick = (timestamp) => {
             if (!startTime) {
                 startTime = timestamp;
             }
             const currentTime = Math.min(timestamp - startTime, duration);
             const percentage = currentTime / duration;
-            for (const prop in startProps) {
-                const start = startProps[prop];
-                const end = endProps[prop];
+            for (const prop in startValues) {
+                const start = startValues[prop];
+                const end = endValues[prop];
+                const unit = units[prop];
                 if (Array.isArray(start)) {
-                    frame[prop] = [];
                     for (let i = 0, len = start.length; i < len; i++) {
-                        frame[prop][i] = start[i] + (end[i] - start[i]) * ease(percentage); 
+                        const value = start[i] + (end[i] - start[i]) * ease(percentage); 
+                        setProperty(el, prop, value, unit);
                     }
                 } else {
-                   frame[prop] = start + (end - start) * ease(percentage); 
+                   const value = start + (end - start) * ease(percentage); 
+                   setProperty(el, prop, value, unit);
                 }
             }
-            setProperties(el, frame, units);
             if (percentage < 1) {
                 requestAnimationFrame(tick);
             } else {
