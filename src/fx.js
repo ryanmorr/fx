@@ -1,3 +1,4 @@
+const cache = {};
 const UNITS_RE = /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/;
 const RGB_RE = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([.\d]+))?\)$/;
 const HEX6_RE = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
@@ -50,6 +51,27 @@ function parseColor(color) {
     return extractRGB(HEX6_RE, color.replace(HEX3_RE, (m, r, g, b) => r + r + g + g + b + b), 16);
 }
 
+function getStartValue(el, prop, unit) {
+    const value = getComputedStyle(el)[prop];
+    const valueUnit = splitUnits(value)[1];
+    if ([unit, 'deg', 'rad', 'turn'].includes(valueUnit)) {
+        return value;
+    }
+    const key = value + unit;
+    if (key in cache) {
+        cache[key];
+    }
+    const baseline = 100;
+    const temp = document.createElement(el.tagName);
+    const parent = (el.parentNode && (el.parentNode !== document)) ? el.parentNode : document.body;
+    parent.appendChild(temp);
+    temp.style.position = 'absolute';
+    temp.style.width = baseline + unit;
+    const convertedUnit = (baseline / temp.offsetWidth) * parseFloat(value);
+    parent.removeChild(temp);
+    return cache[key] = convertedUnit;
+}
+
 function getValues(el, props) {
     const startValues = {};
     const endValues = {};
@@ -67,7 +89,7 @@ function getValues(el, props) {
             endValues[prop] = to;
         } else {
             const [value, unit] = splitUnits(to);
-            from = from == null ? getComputedStyle(el)[prop] || 0 : splitUnits(from)[0];
+            from = from == null ? getStartValue(el, prop, unit) || 0 : splitUnits(from)[0];
             startValues[prop] = parseFloat(from);
             endValues[prop] = parseFloat(value);
             units[prop] = unit;
