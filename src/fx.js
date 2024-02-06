@@ -1,3 +1,8 @@
+const UNITS_RE = /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/;
+const RGB_RE = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([.\d]+))?\)$/;
+const HEX6_RE = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+const HEX3_RE = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+
 const defaultProps = {
     duration: 1000,
     easing: 'ease-in-out'
@@ -10,9 +15,9 @@ const easingFunctions = {
     'ease-in-out': (t) =>  .5 * (Math.sin((t - .5) * Math.PI) + 1)
 };
 
-function calculateEase(ease, start, end, percentage) {
+function calculatePosition(ease, start, end, percentage) {
     if (Array.isArray(start)) {
-        return start.map((val, i) => calculateEase(ease, val, end[i], percentage));
+        return start.map((val, i) => calculatePosition(ease, val, end[i], percentage));
     }
     return start + (end - start) * ease(percentage);
 }
@@ -21,31 +26,28 @@ function splitUnits(val) {
     if (typeof val === 'number') {
         return [val, 'px'];
     }
-    return /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/.exec(val);
+    return UNITS_RE.exec(val);
 }
 
 function isColor(prop) {
     return prop.toLowerCase().includes('color');
 }
 
+function extractRGB(re, color, radix) {
+    const match = re.exec(color);
+    return [
+        parseInt(match[1], radix),
+        parseInt(match[2], radix),
+        parseInt(match[3], radix),
+        match[4] == null ? 1 : parseFloat(match[4])
+    ];
+}
+
 function parseColor(color) {
     if (color.startsWith('rgb')) {
-        const match = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*(\d{1,3}))?\)$/.exec(color);
-        return [
-            parseInt(match[1], 10),
-            parseInt(match[2], 10),
-            parseInt(match[3], 10),
-            match[4] == null ? 1 : match[4]
-        ];
+        return extractRGB(RGB_RE, color, 10);
     }
-    const hex = color.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (m, r, g, b) => r + r + g + g + b + b);
-    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return [
-        parseInt(match[1], 16),
-        parseInt(match[2], 16),
-        parseInt(match[3], 16),
-        1
-    ];
+    return extractRGB(HEX6_RE, color.replace(HEX3_RE, (m, r, g, b) => r + r + g + g + b + b), 16);
 }
 
 function getValues(el, props) {
@@ -86,7 +88,7 @@ function setProperty(el, prop, value, unit) {
         default:
             if (prop in el.style) {
                 if (isColor(prop)) {
-                    el.style[prop] = `rgba(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
+                    el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
                 } else {
                     el.style[prop] = value + unit;
                 }
@@ -108,7 +110,7 @@ export default function fx(target, props) {
             const currentTime = Math.min(timestamp - startTime, duration);
             const percentage = currentTime / duration;
             for (const prop in startValues) {
-                setProperty(el, prop, calculateEase(ease, startValues[prop], endValues[prop], percentage), units[prop]);
+                setProperty(el, prop, calculatePosition(ease, startValues[prop], endValues[prop], percentage), units[prop]);
             }
             if (percentage < 1) {
                 requestAnimationFrame(tick);
