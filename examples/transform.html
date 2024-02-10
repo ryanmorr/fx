@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Transform Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+    rotate: 15deg;
+    translate: 50px;
+    scale: 25%;
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+const element = document.querySelector('#fx-element');
+fx(element, {translateY: 300, translateX: 600, rotate: '135deg', scaleX: '300%', scaleY: 3});
+</script>
+
+</body>
+</html>

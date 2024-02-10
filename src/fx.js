@@ -23,11 +23,13 @@ function calculatePosition(ease, start, end, percentage) {
     return start + (end - start) * ease(percentage);
 }
 
-function splitUnits(val) {
-    if (typeof val === 'number') {
-        return [val, 'px'];
-    }
-    return UNITS_RE.exec(val);
+function getStyle(el, prop) {
+    return getComputedStyle(el)[prop];
+}
+
+function getUnit(value) {
+    const match = UNITS_RE.exec(value);
+    return match && match[1] ? match[1] : null;
 }
 
 function isColor(prop) {
@@ -51,11 +53,20 @@ function parseColor(color) {
     return extractRGB(HEX6_RE, color.replace(HEX3_RE, (m, r, g, b) => r + r + g + g + b + b), 16);
 }
 
-function getStartValue(el, prop, unit) {
-    const value = getComputedStyle(el)[prop];
-    const valueUnit = splitUnits(value)[1];
-    if ([unit, 'deg', 'rad', 'turn'].includes(valueUnit)) {
-        return value;
+function getStartValue(el, prop, value, unit) {
+    const numericValue = parseFloat(value);
+    if (value === 'none' || numericValue === 0) {
+        return 0;
+    }
+    if (unit == null) {
+        return numericValue;
+    }
+    if (prop === 'scale' && unit === '%') {
+        return numericValue * 100;
+    }
+    const valueUnit = getUnit(value);
+    if (unit === valueUnit || 'deg' === valueUnit || 'rad' === valueUnit || 'turn' === valueUnit) {
+        return numericValue;
     }
     const key = value + unit;
     if (key in cache) {
@@ -67,9 +78,55 @@ function getStartValue(el, prop, unit) {
     parent.appendChild(temp);
     temp.style.position = 'absolute';
     temp.style.width = baseline + unit;
-    const convertedUnit = (baseline / temp.offsetWidth) * parseFloat(value);
+    const convertedUnit = (baseline / temp.offsetWidth) * numericValue;
     parent.removeChild(temp);
     return cache[key] = convertedUnit;
+}
+
+function getTransform(el, prop, defaultValue) {
+    const values = [defaultValue, defaultValue];
+    const style = getStyle(el, prop);
+    if (style !== 'none') {
+        const parts = style.split(' ');
+        if (prop === 'scale' && parts.length === 1) {
+            values[0] = values[1] = style;
+        } else {
+            style.split(' ').forEach((v, i) => values[i] = v);
+        }
+    }
+    return values;
+}
+
+function setTransformAxis(el, transform, name, props, from, to, index, units) {
+    if (name in props) {
+        const propTo = props[name];
+        const [propFrom, value] = Array.isArray(propTo) ? propTo : [null, propTo];
+        const unit = getUnit(value);
+        if (propFrom) {
+            from[index] = parseFloat(propFrom);
+        } else {
+            from[index] = getStartValue(el, transform, from[index], unit);
+        }
+        to[index] = parseFloat(value);
+        if (unit) {
+            units[transform][index] = unit;
+        } 
+    } else {
+        from[index] = parseFloat(from[index]);
+        to[index] = from[index];
+    }
+}
+
+function setTransform(el, transform, props, startValues, endValues, units) {
+    const defaultValue = transform === 'scale' ? 1 : 0;
+    const defaultUnit = transform === 'scale' ? '' : 'px';
+    const to = [defaultValue, defaultValue];
+    const from = getTransform(el, transform, defaultValue);
+    units[transform] = [defaultUnit, defaultUnit];
+    setTransformAxis(el, transform, transform + 'X', props, from, to, 0, units);
+    setTransformAxis(el, transform, transform + 'Y', props, from, to, 1, units);
+    startValues[transform] = from;
+    endValues[transform] = to;
 }
 
 function getValues(el, props) {
@@ -80,18 +137,23 @@ function getValues(el, props) {
         const value = props[prop];
         let [from, to] = Array.isArray(value) ? value : [null, value];
         if (isColor(prop)) {
-            from = from == null ? getComputedStyle(el)[prop] : from;
+            from = from == null ? getStyle(el, prop) : from;
             startValues[prop] = parseColor(from);
             endValues[prop] = parseColor(to);
         } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
             from = from == null ? el[prop] : from;
             startValues[prop] = from;
             endValues[prop] = to;
+        } else if (prop.startsWith('translate') || prop.startsWith('scale')) {
+            const transform = prop.slice(0, -1);
+            if (!(transform in startValues)) {
+                setTransform(el, transform, props, startValues, endValues, units);
+            }
         } else {
-            const [value, unit] = splitUnits(to);
-            from = from == null ? getStartValue(el, prop, unit) || 0 : splitUnits(from)[0];
-            startValues[prop] = parseFloat(from);
-            endValues[prop] = parseFloat(value);
+            const unit = getUnit(to);
+            from = from == null ? getStartValue(el, prop, getStyle(el, prop), unit) || 0 : parseFloat(from);
+            startValues[prop] = from;
+            endValues[prop] = parseFloat(to);
             units[prop] = unit;
         }
     }
@@ -107,12 +169,19 @@ function setProperty(el, prop, value, unit) {
         case 'scrollLeft':
             el[prop] = value;
             break;
+        case 'rotate':
+            el.style[prop] = value + (unit || 'deg');
+            break;
+        case 'scale':
+        case 'translate':
+            el.style[prop] = value[0] + unit[0] + ' ' + value[1] + unit[1];
+            break;
         default:
             if (prop in el.style) {
                 if (isColor(prop)) {
                     el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
                 } else {
-                    el.style[prop] = value + unit;
+                    el.style[prop] = value + (unit || 'px');
                 }
             }
     }
