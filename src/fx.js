@@ -103,7 +103,7 @@ function getTransform(el, prop, defaultValue) {
         if (prop === 'scale' && parts.length === 1) {
             values[0] = values[1] = style;
         } else {
-            style.split(' ').forEach((v, i) => values[i] = v);
+            parts.forEach((v, i) => values[i] = v);
         }
     }
     return values;
