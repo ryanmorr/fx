@@ -9,6 +9,14 @@ const defaultProps = {
     easing: 'ease-in-out'
 };
 
+const defaultUnits = {
+    all: 'px',
+    scale: '',
+    rotate: 'deg',
+    translate: 'px',
+    opacity: ''
+};
+
 const easingFunctions = {
     'linear': (t) => t,
     'ease-in': (t) => Math.pow(t, 1.675),
@@ -27,9 +35,13 @@ function getStyle(el, prop) {
     return getComputedStyle(el)[prop];
 }
 
-function getUnit(value) {
+function extractUnit(value) {
     const match = UNITS_RE.exec(value);
     return match && match[1] ? match[1] : null;
+}
+
+function getUnit(prop, unit) {
+    return unit == null ? (prop in defaultUnits ? defaultUnits[prop] : defaultUnits.all) : unit;
 }
 
 function isColor(prop) {
@@ -64,7 +76,7 @@ function getStartValue(el, prop, value, unit) {
     if (prop === 'scale' && unit === '%') {
         return numericValue * 100;
     }
-    const valueUnit = getUnit(value);
+    const valueUnit = extractUnit(value);
     if (unit === valueUnit || 'deg' === valueUnit || 'rad' === valueUnit || 'turn' === valueUnit) {
         return numericValue;
     }
@@ -101,7 +113,7 @@ function setTransformAxis(el, transform, name, props, from, to, index, units) {
     if (name in props) {
         const propTo = props[name];
         const [propFrom, value] = Array.isArray(propTo) ? propTo : [null, propTo];
-        const unit = getUnit(value);
+        const unit = extractUnit(value);
         if (propFrom) {
             from[index] = parseFloat(propFrom);
         } else {
@@ -119,10 +131,9 @@ function setTransformAxis(el, transform, name, props, from, to, index, units) {
 
 function setTransform(el, transform, props, startValues, endValues, units) {
     const defaultValue = transform === 'scale' ? 1 : 0;
-    const defaultUnit = transform === 'scale' ? '' : 'px';
     const to = [defaultValue, defaultValue];
     const from = getTransform(el, transform, defaultValue);
-    units[transform] = [defaultUnit, defaultUnit];
+    units[transform] = [];
     setTransformAxis(el, transform, transform + 'X', props, from, to, 0, units);
     setTransformAxis(el, transform, transform + 'Y', props, from, to, 1, units);
     startValues[transform] = from;
@@ -150,7 +161,7 @@ function getValues(el, props) {
                 setTransform(el, transform, props, startValues, endValues, units);
             }
         } else {
-            const unit = getUnit(to);
+            const unit = extractUnit(to);
             from = from == null ? getStartValue(el, prop, getStyle(el, prop), unit) || 0 : parseFloat(from);
             startValues[prop] = from;
             endValues[prop] = parseFloat(to);
@@ -162,26 +173,20 @@ function getValues(el, props) {
 
 function setProperty(el, prop, value, unit) {
     switch (prop) {
-        case 'opacity':
-            el.style[prop] = value;
-            break;
         case 'scrollTop':
         case 'scrollLeft':
             el[prop] = value;
             break;
-        case 'rotate':
-            el.style[prop] = value + (unit || 'deg');
-            break;
         case 'scale':
         case 'translate':
-            el.style[prop] = value[0] + unit[0] + ' ' + value[1] + unit[1];
+            el.style[prop] = value[0] + getUnit(prop, unit[0]) + ' ' + value[1] + getUnit(prop, unit[1]);
             break;
         default:
             if (prop in el.style) {
                 if (isColor(prop)) {
                     el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
                 } else {
-                    el.style[prop] = value + (unit || 'px');
+                    el.style[prop] = value + getUnit(prop, unit);
                 }
             }
     }
