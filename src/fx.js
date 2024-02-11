@@ -204,7 +204,7 @@ export default function fx(target, props) {
     const {duration, easing} = Object.assign(defaultProps, props);
     return new Promise((resolve) => {
         let startTime;
-        const ease = easingFunctions[easing];
+        const ease = typeof easing === 'string' ? easingFunctions[easing] : easing;
         const [startValues, endValues, units] = getValues(el, props);
         const tick = (timestamp) => {
             if (!startTime) {
