@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Easing Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+select {
+    vertical-align: middle;
+    margin: 0 15px;
+}
+
+#fx-element {
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<section>
+    <label>Easing Function:</label>
+    <select>
+        <option value="linear">linear</option>
+        <option value="ease-in">ease-in</option>
+        <option value="ease-out">ease-out</option>
+        <option value="ease-in-out">ease-in-out</option>
+    </select>
+    <button>Animate</button>
+</section>
+
+<div id="fx-element"></div>
+
+<script>
+let easing = 'linear';
+const select = document.querySelector('select');
+const btn = document.querySelector('button');
+const el = document.querySelector('#fx-element');
+
+select.addEventListener('change', () => {
+    easing = select.options[select.selectedIndex].value;
+});
+
+btn.addEventListener('click', () => {
+    fx(el, {translateX: 1000, easing});
+});
+
+</script>
+
+</body>
+</html>
