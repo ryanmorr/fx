@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX From-To Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+fx('#fx-element', {translateX: [1000, 100], translateY: [500, 100]});
+</script>
+
+</body>
+</html>
