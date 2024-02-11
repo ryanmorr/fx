@@ -14,7 +14,8 @@ const defaultUnits = {
     scale: '',
     rotate: 'deg',
     translate: 'px',
-    opacity: ''
+    opacity: '',
+    offsetDistance: '%'
 };
 
 const easingFunctions = {

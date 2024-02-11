@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Motion Path Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+#wrapper {
+    height: 263px;
+    width: 100%;
+    max-width: 484px;
+    margin: 50px;
+    background: url('data:image/svg+xml,<svg width="484" height="244" viewBox="0 0 484 244" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 122C2 55.7258 55.7258 2 122 2C188.274 2 242 55.7258 242 122C242 188.274 295.726 242 362 242C428.274 242 482 188.274 482 122" stroke="black" stroke-width="3"/></svg>') no-repeat;
+}
+
+
+#fx-element {
+    display: block;
+    height: 50px;
+    width: 50px;
+    background: red;
+    offset-path: path("M2 122C2 55.7258 55.7258 2 122 2C188.274 2 242 55.7258 242 122C242 188.274 295.726 242 362 242C428.274 242 482 188.274 482 122");
+}
+
+</style>
+
+<div id="wrapper">
+    <div id="fx-element"></div>
+</div>
+
+<script>
+fx('#fx-element', {offsetDistance: 100});
+</script>
+
+</body>
+</html>
