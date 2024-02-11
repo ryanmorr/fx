@@ -32,7 +32,16 @@ function calculatePosition(ease, start, end, percentage) {
 }
 
 function getStyle(el, prop) {
-    return getComputedStyle(el)[prop];
+    const style = getComputedStyle(el);
+    return prop.includes('-') ? style.getPropertyValue(prop) : style[prop];
+}
+
+function setStyle(el, prop, value) {
+    if (prop.includes('-')) {
+        el.style.setProperty(prop, value);
+    } else {
+        el.style[prop] = value;
+    }
 }
 
 function extractUnit(value) {
@@ -179,15 +188,13 @@ function setProperty(el, prop, value, unit) {
             break;
         case 'scale':
         case 'translate':
-            el.style[prop] = value[0] + getUnit(prop, unit[0]) + ' ' + value[1] + getUnit(prop, unit[1]);
+            setStyle(el, prop, value[0] + getUnit(prop, unit[0]) + ' ' + value[1] + getUnit(prop, unit[1]));
             break;
         default:
-            if (prop in el.style) {
-                if (isColor(prop)) {
-                    el.style[prop] = `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`;
-                } else {
-                    el.style[prop] = value + getUnit(prop, unit);
-                }
+            if (isColor(prop)) {
+                setStyle(el, prop, `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`);
+            } else {
+                setStyle(el, prop, value + getUnit(prop, unit));
             }
     }
 }

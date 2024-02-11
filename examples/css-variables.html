@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX CSS Variables Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+#fx-element {
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+    translate: var(--x, 0) var(--y, 0);
+}
+</style>
+
+<div id="fx-element"></div>
+
+<script>
+fx('#fx-element', {'--x': 1000, '--y': 500});
+</script>
+
+</body>
+</html>
