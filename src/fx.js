@@ -1,4 +1,7 @@
+let raf = 0;
+const animations = [];
 const cache = {};
+
 const UNITS_RE = /[+-]?\d*\.?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/;
 const RGB_RE = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([.\d]+))?\)$/;
 const HEX6_RE = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
@@ -200,28 +203,58 @@ function setProperty(el, prop, value, unit) {
     }
 }
 
-export default function fx(target, props) {
-    const el = typeof target === 'string' ? document.querySelector(target) : target;
-    const {duration, easing} = Object.assign(defaultProps, props);
+function play(update) {
+    if (raf === 0) {
+        raf = requestAnimationFrame(tick);
+    }
     return new Promise((resolve) => {
-        let startTime;
-        const ease = typeof easing === 'string' ? easingFunctions[easing] : easing;
-        const [startValues, endValues, units] = getValues(el, props);
-        const tick = (timestamp) => {
-            if (!startTime) {
-                startTime = timestamp;
+        const callback = (timestamp) => update(timestamp, () => {
+            resolve();
+            const index = animations.indexOf(callback);
+            if (index !== -1) {
+                animations.splice(index, 1);
             }
-            const currentTime = Math.min(timestamp - startTime, duration);
-            const percentage = currentTime / duration;
-            for (const prop in startValues) {
-                setProperty(el, prop, calculatePosition(ease, startValues[prop], endValues[prop], percentage), units[prop]);
-            }
-            if (percentage < 1) {
-                requestAnimationFrame(tick);
-            } else {
-                resolve();
-            }
-        };
-        requestAnimationFrame(tick);
+        });
+        animations.push(callback);
     });
+}
+
+function tick(timestamp) {
+    animations.slice().forEach((animation) => animation(timestamp));
+    if (animations.length > 0) {
+        raf = requestAnimationFrame(tick);
+    } else {
+        raf = 0;
+    }
+}
+
+function animate(el, props, duration, ease) {
+    let startTime;
+    const [startValues, endValues, units] = getValues(el, props);
+    return play((timestamp, done) => {
+        if (!startTime) {
+            startTime = timestamp;
+        }
+        const currentTime = Math.min(timestamp - startTime, duration);
+        const percentage = currentTime / duration;
+        for (const prop in startValues) {
+            setProperty(el, prop, calculatePosition(ease, startValues[prop], endValues[prop], percentage), units[prop]);
+        }
+        if (percentage >= 1) {
+            done();
+        }
+    });
+}
+
+export default function fx(target, props) {
+    const elements = typeof target === 'string' ? document.querySelectorAll(target) : target;
+    const {duration, easing} = Object.assign(defaultProps, props);
+    const ease = typeof easing === 'string' ? easingFunctions[easing] : easing;
+    if (elements.nodeName) {
+        return animate(elements, props, duration, ease);
+    }
+    if (elements.length === 1) {
+        return animate(elements[0], props, duration, ease);
+    }
+    return Promise.all(Array.from(elements).map((el) => animate(el, props, duration, ease)));
 }
