@@ -14,8 +14,7 @@
     "javascript",
     "animation",
     "effects",
-    "tween",
-    "easing"
+    "tween"
   ],
   "type": "module",
   "main": "dist/cjs/fx.js",
