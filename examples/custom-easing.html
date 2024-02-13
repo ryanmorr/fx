@@ -18,19 +18,19 @@
 <div id="fx-element"></div>
 
 <script>
-function bounce(pos) {
-    if (pos < 1 / 2.75) {
-        return 7.5625 * pos * pos
-    } else if (pos < 2 / 2.75) {
-        return 7.5625 * (pos -= 1.5 / 2.75) * pos + 0.75
-    } else if (pos < 2.5 / 2.75) {
-        return 7.5625 * (pos -= 2.25 / 2.75) * pos + 0.9375
+function bounceIn(t) {
+    if (t < 1 / 2.75) {
+        return 7.5625 * t * t;
+    } else if (t < 2 / 2.75) {
+        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+    } else if (t < 2.5 / 2.75) {
+        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
     } else {
-        return 7.5625 * (pos -= 2.625 / 2.75) * pos + 0.984375
+        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
     }
 }
 
-fx('#fx-element', {translateX: 1000, easing: bounce});
+fx('#fx-element', {translateX: 1000, easing: bounceIn});
 </script>
 
 </body>
