@@ -28,24 +28,15 @@ const easingFunctions = {
     'ease-in-out': (t) =>  .5 * (Math.sin((t - .5) * Math.PI) + 1)
 };
 
-function calculatePosition(ease, start, end, percentage) {
-    if (Array.isArray(start)) {
-        return start.map((val, i) => calculatePosition(ease, val, end[i], percentage));
+function removeAnimation(animation) {
+    const index = animations.indexOf(animation);
+    if (index > -1) {
+        animations.splice(index, 1);
     }
-    return start + (end - start) * ease(percentage);
 }
 
-function getStyle(el, prop) {
-    const style = getComputedStyle(el);
-    return prop.includes('-') ? style.getPropertyValue(prop) : style[prop];
-}
-
-function setStyle(el, prop, value) {
-    if (prop.includes('-')) {
-        el.style.setProperty(prop, value);
-    } else {
-        el.style[prop] = value;
-    }
+function getBounds(data) {
+    return Array.isArray(data) ? data : [null, data];
 }
 
 function extractUnit(value) {
@@ -78,9 +69,26 @@ function parseColor(color) {
     return extractRGB(HEX6_RE, color.replace(HEX3_RE, (m, r, g, b) => r + r + g + g + b + b), 16);
 }
 
+// Adapted from: https://github.com/juliangarnier/anime/blob/refs/tags/v3.2.2/src/index.js#L408
+function convertPixelsToUnit(el, value, unit) {
+    const key = value + unit;
+    if (key in cache) {
+        cache[key];
+    }
+    const baseline = 100;
+    const temp = document.createElement(el.tagName);
+    const parent = (el.parentNode && (el.parentNode !== document)) ? el.parentNode : document.body;
+    parent.appendChild(temp);
+    temp.style.position = 'absolute';
+    temp.style.width = baseline + unit;
+    const convertedUnit = (baseline / temp.offsetWidth) * parseFloat(value);
+    parent.removeChild(temp);
+    return cache[key] = convertedUnit;
+}
+
 function getStartValue(el, prop, value, unit) {
     const numericValue = parseFloat(value);
-    if (value === 'none' || numericValue === 0) {
+    if (value === 'none' || value === '' || numericValue === 0) {
         return 0;
     }
     if (unit == null) {
@@ -93,19 +101,20 @@ function getStartValue(el, prop, value, unit) {
     if (unit === valueUnit || 'deg' === valueUnit || 'rad' === valueUnit || 'turn' === valueUnit) {
         return numericValue;
     }
-    const key = value + unit;
-    if (key in cache) {
-        cache[key];
+    return convertPixelsToUnit(el, value, unit);
+}
+
+function getStyle(el, prop) {
+    const style = getComputedStyle(el);
+    return prop.includes('-') ? style.getPropertyValue(prop) : style[prop];
+}
+
+function setStyle(el, prop, value) {
+    if (prop.includes('-')) {
+        el.style.setProperty(prop, value);
+    } else {
+        el.style[prop] = value;
     }
-    const baseline = 100;
-    const temp = document.createElement(el.tagName);
-    const parent = (el.parentNode && (el.parentNode !== document)) ? el.parentNode : document.body;
-    parent.appendChild(temp);
-    temp.style.position = 'absolute';
-    temp.style.width = baseline + unit;
-    const convertedUnit = (baseline / temp.offsetWidth) * numericValue;
-    parent.removeChild(temp);
-    return cache[key] = convertedUnit;
 }
 
 function getTransform(el, prop, defaultValue) {
@@ -122,66 +131,58 @@ function getTransform(el, prop, defaultValue) {
     return values;
 }
 
-function setTransformAxis(el, transform, name, props, from, to, index, units) {
-    if (name in props) {
-        const propTo = props[name];
-        const [propFrom, value] = Array.isArray(propTo) ? propTo : [null, propTo];
-        const unit = extractUnit(value);
-        if (propFrom) {
-            from[index] = parseFloat(propFrom);
-        } else {
-            from[index] = getStartValue(el, transform, from[index], unit);
-        }
-        to[index] = parseFloat(value);
-        if (unit) {
-            units[transform][index] = unit;
-        } 
-    } else {
-        from[index] = parseFloat(from[index]);
-        to[index] = from[index];
-    }
-}
-
-function setTransform(el, transform, props, startValues, endValues, units) {
-    const defaultValue = transform === 'scale' ? 1 : 0;
-    const to = [defaultValue, defaultValue];
-    const from = getTransform(el, transform, defaultValue);
-    units[transform] = [];
-    setTransformAxis(el, transform, transform + 'X', props, from, to, 0, units);
-    setTransformAxis(el, transform, transform + 'Y', props, from, to, 1, units);
-    startValues[transform] = from;
-    endValues[transform] = to;
-}
-
-function getValues(el, props) {
-    const startValues = {};
-    const endValues = {};
+function processTween(el, props) {
+    const start = {};
+    const end = {};
     const units = {};
-    for (const prop in props) {
-        const value = props[prop];
-        let [from, to] = Array.isArray(value) ? value : [null, value];
-        if (isColor(prop)) {
-            from = from == null ? getStyle(el, prop) : from;
-            startValues[prop] = parseColor(from);
-            endValues[prop] = parseColor(to);
-        } else if (prop === 'scrollTop' || prop === 'scrollLeft') {
-            from = from == null ? el[prop] : from;
-            startValues[prop] = from;
-            endValues[prop] = to;
-        } else if (prop.startsWith('translate') || prop.startsWith('scale')) {
-            const transform = prop.slice(0, -1);
-            if (!(transform in startValues)) {
-                setTransform(el, transform, props, startValues, endValues, units);
+    Object.keys(props).forEach((prop) => {
+        let [from, to] = getBounds(props[prop]);
+        switch (prop) {
+            case 'scrollTop':
+            case 'scrollLeft':
+                start[prop] = from == null ? el[prop] : from;
+                end[prop] = to;
+                break;
+            case 'scaleX':
+            case 'scaleY':
+            case 'translateX':
+            case 'translateY': {
+                const transform = prop.slice(0, -1);
+                if (!start[transform]) {
+                    const defaultValue = transform === 'scale' ? 1 : 0;
+                    from = getTransform(el, transform, defaultValue);
+                    to = [defaultValue, defaultValue];
+                    units[transform] = [];
+                    ['X', 'Y'].forEach((axis, index) => {
+                        const transformAxis = transform + axis;
+                        if (transformAxis in props) {
+                            const [fromValue, toValue] = getBounds(props[transformAxis]);
+                            const unit = extractUnit(toValue);
+                            from[index] = fromValue == null ? getStartValue(el, transform, from[index], unit) : parseFloat(fromValue);
+                            to[index] = parseFloat(toValue);
+                            units[transform][index] = unit;
+                        } else {
+                            from[index] = to[index] = parseFloat(from[index]);
+                        }
+                    });
+                    start[transform] = from;
+                    end[transform] = to;
+                }
+                break;
             }
-        } else {
-            const unit = extractUnit(to);
-            from = from == null ? getStartValue(el, prop, getStyle(el, prop), unit) || 0 : parseFloat(from);
-            startValues[prop] = from;
-            endValues[prop] = parseFloat(to);
-            units[prop] = unit;
+            default:
+                if (isColor(prop)) {
+                    start[prop] = parseColor(from == null ? getStyle(el, prop) : from);
+                    end[prop] = parseColor(to);
+                } else {
+                    const unit = extractUnit(to);
+                    start[prop] = from == null ? getStartValue(el, prop, getStyle(el, prop), unit) : parseFloat(from);
+                    end[prop] = parseFloat(to);
+                    units[prop] = unit;
+                }
         }
-    }
-    return [startValues, endValues, units];
+    });
+    return [start, end, units];
 }
 
 function setProperty(el, prop, value, unit) {
@@ -195,11 +196,7 @@ function setProperty(el, prop, value, unit) {
             setStyle(el, prop, value[0] + getUnit(prop, unit[0]) + ' ' + value[1] + getUnit(prop, unit[1]));
             break;
         default:
-            if (isColor(prop)) {
-                setStyle(el, prop, `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})`);
-            } else {
-                setStyle(el, prop, value + getUnit(prop, unit));
-            }
+            setStyle(el, prop, isColor(prop) ? `rgb(${Math.floor(value[0])}, ${Math.floor(value[1])}, ${Math.floor(value[2])}, ${value[3]})` : value + getUnit(prop, unit));
     }
 }
 
@@ -208,38 +205,34 @@ function play(update) {
         raf = requestAnimationFrame(tick);
     }
     return new Promise((resolve) => {
-        const callback = (timestamp) => update(timestamp, () => {
-            resolve();
-            const index = animations.indexOf(callback);
-            if (index !== -1) {
-                animations.splice(index, 1);
-            }
-        });
-        animations.push(callback);
+        const done = () => (resolve(), removeAnimation(animation));
+        const animation = (timestamp) => update(timestamp, done);
+        animations.push(animation);
     });
 }
 
 function tick(timestamp) {
-    animations.slice().forEach((animation) => animation(timestamp));
-    if (animations.length > 0) {
-        raf = requestAnimationFrame(tick);
-    } else {
-        raf = 0;
+    for (let i = animations.length; i--;) animations[i](timestamp);
+    raf = (animations.length > 0) ? requestAnimationFrame(tick) : 0;
+}
+
+function calc(ease, start, end, percentage) {
+    if (Array.isArray(start)) {
+        return start.map((val, i) => calc(ease, val, end[i], percentage));
     }
+    return start + (end - start) * ease(percentage);
 }
 
 function animate(el, props, duration, ease) {
     let startTime;
-    const [startValues, endValues, units] = getValues(el, props);
+    const [start, end, units] = processTween(el, props);
     return play((timestamp, done) => {
         if (!startTime) {
             startTime = timestamp;
         }
         const currentTime = Math.min(timestamp - startTime, duration);
         const percentage = currentTime / duration;
-        for (const prop in startValues) {
-            setProperty(el, prop, calculatePosition(ease, startValues[prop], endValues[prop], percentage), units[prop]);
-        }
+        Object.keys(start).forEach((prop) => setProperty(el, prop, calc(ease, start[prop], end[prop], percentage), units[prop]));
         if (percentage >= 1) {
             done();
         }
