@@ -1,167 +1,130 @@
 # fx
 
 [![Version Badge][version-image]][project-url]
-[![Build Status][build-image]][build-url]
-[![Dependencies][dependencies-image]][project-url]
 [![License][license-image]][license-url]
-[![File Size][file-size-image]][project-url]
+[![Build Status][build-image]][build-url]
 
-> A lightweight and standalone JavaScript animation library
+> JavaScript animation library
+
+## Install
+
+Download the [CJS](https://github.com/ryanmorr/fx/raw/master/dist/cjs/fx.js), [ESM](https://github.com/ryanmorr/fx/raw/master/dist/esm/fx.js), [UMD](https://github.com/ryanmorr/fx/raw/master/dist/umd/fx.js) versions or install via NPM:
+
+```sh
+npm install @ryanmorr/fx
+```
 
 ## Usage
 
-Perform animations on almost all CSS properties, including transforms, colors, and scroll position. Additionally supports CSS units, transitional easing functions, effects, queued animations, custom events, and promise-style callbacks:
+Provide an element, nodelist, or selector string and an object that maps CSS properties to a value that the property will be animated to. It returns a promise that is resolved when the animation is complete:
 
 ```javascript
-import fx from 'fx';
+import fx from '@ryanmorr/fx';
 
-// Start a new animation
-fx('#foo').animate({
-    width: 100, // Uses pixels as default CSS unit
-    height: '3em', // Explicitly define any CSS unit to use instead
-    top: [50, 100], // Provide an array to define the starting point for an animation ([from, to])
-    scale: 0.5, // Supports CSS transforms
-    scrollLeft: 100, // Supports scrolling
-    backgroundColor: '#FF0000', // Supports colors
-});
-
-// Provide a duration, easing function, and add a callback function
-fx(element).animate({scrollTop: 100}, 1000, 'ease-in-expo').then(() => {
-    console.log('Animation complete') ;
-});
-
-// Queue multiple effects
-fx('#bar').fadeIn().scale(100).fadeOut();
-```
-
-## API
-
-### fx(element)
-
-Create a new instance by passing a DOM element or selector string:
-
-```javascript
-const animation = fx('#foo');
-```
-
-### fx#animate(properties[, duration, easing, ...callbacks])
-
-Start an animation by providing an object that maps CSS properties (in camel-cased format) to the value it should be animated to. Optionally provide a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').animate({width: 100, height: 100}, 1000, 'ease-out-circ');
-```
-
-### fx#fadeIn([duration, easing, ...callbacks])
-
-Fade an element in. Optionally provide a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-in-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').fadeIn(400, 'ease-in-sine');
-```
-
-### fx#fadeOut([duration, easing, ...callbacks])
-
-Fade an element out. Optionally provide a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').fadeOut(300);
-```
-
-### fx#slideIn([direction, duration, easing, ...callbacks])
-
-Slide and fade an element in. Optionally provide a direction (defaults to "top"), a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-in-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').slideIn('left', 600, 'ease-in-out-expo', () => console.log('done'));
-```
-
-### fx#slideOut([direction, duration, easing, ...callbacks])
-
-Slide and fade an element out. Optionally provide a direction (defaults to "bottom"), a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').slideOut('right');
-```
-
-### fx#move(x, y[, duration, easing, ...callbacks])
-
-Move an element via the `translateX` and `translateY` CSS transform properties. Optionally provide a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').move(100, '5em');
-```
-
-### fx#scale(percent[, duration, easing, ...callbacks])
-
-Scale an element up or down by percentage via the `scale` CSS transform property. Optionally provide a duration in milliseconds (defaults to 350), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').scale(150);
-```
-
-### fx#highlight([color, property, duration, easing, ...callbacks])
-
-Highlight an element by flashing a color. Optionally provide the color in RGB or hex format (defaults to "#ffff9c"), the color property to animate (defaults to `backgroundColor`), a duration in milliseconds (defaults to 700), an easing function (defaults to 'ease-in-out-quart'), and one or more callback functions. Returns the `fx` instance:
-
-```javascript
-fx('#foo').highlight('#FF0000', 'borderColor');
-```
-
-### fx#then(fn)
-
-Add a callback function to the currently running animation or the last animation in the queue:
-
-```javascript
-fx('#foo').fadeIn().then(() => {
-    console.log('done'); 
+await fx('#foo', {
+    width: 100,
+    height: 200
 });
 ```
 
-### fx#stop()
-
-Stop the currently running animation:
+Optionally specify the duration in milliseconds (defaults to 1000):
 
 ```javascript
-fx('#foo').fadeIn().stop();
-```
-
-### fx#on(name, fn)
-
-Subscribe a callback function to one of the custom events (start, tick, and done):
-
-```javascript
-const animation = fx(element);
-
-animation.on('start', () => {
-    console.log('Animation started');
-});
-
-animation.on('tick', (progress, frame) => {
-    console.log('Animation progress:' + progress + '%');
-});
-
-animation.on('done', () => {
-    console.log('Animation completed');
+fx(element, {
+    width: 100,
+    duration: 500
 });
 ```
 
-### fx#clear()
-
-Clear the animation queue:
+Optionally provide an easing method as a string, supporting "linear", "ease-in", "ease-out", and the default "ease-in-out":
 
 ```javascript
-fx('#foo').fadeIn().fadeOut().clear();
+fx(element, {
+    opacity: 0,
+    easing: 'ease-in'
+});
 ```
 
-## Installation
+Define a starting value for the animation by using an array, with the start value at the first index and the end value at the last index:
 
-fx is [CommonJS](http://www.commonjs.org/) and [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) compatible with no dependencies. You can download the [development](http://github.com/ryanmorr/fx/raw/master/dist/fx.js) or [minified](http://github.com/ryanmorr/fx/raw/master/dist/fx.min.js) version, or install it in one of the following ways:
+```javascript
+fx(element, {
+    width: [100, 500]
+});
+```
 
-``` sh
-npm install ryanmorr/fx
+Add units to the value to override the default "px" used by most properties:
 
-bower install ryanmorr/fx
+```javascript
+fx(element, {
+    height: '5em'
+});
+```
+
+Supports 2D transforms:
+
+```javascript
+fx(element, {
+    translateX: 100,
+    translateY: 100,
+    scaleX: 2,
+    scaleY: 2,
+    rotate: 45
+});
+```
+
+Supports colors as hex or RGB:
+
+```javascript
+fx(element, {
+    color: '#0000FF',
+    backgroundColor: 'rgb(255, 0, 0)'
+});
+```
+
+Supports custom properties:
+
+```javascript
+fx(element, {
+    '--value': 100
+});
+```
+
+Supports scrolling:
+
+```javascript
+fx(element, {
+    scrollTop: 100,
+    scrollLeft: 100
+});
+```
+
+Supports motion path:
+
+```javascript
+fx(element, {
+    offsetDistance: '100%'
+});
+```
+Supports a custom easing function:
+
+```javascript
+function bounceIn(t) {
+    if (t < 1 / 2.75) {
+        return 7.5625 * t * t;
+    } else if (t < 2 / 2.75) {
+        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+    } else if (t < 2.5 / 2.75) {
+        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+    } else {
+        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+    }
+}
+
+fx(element, {
+    translateX: 500,
+    easing: bounceIn
+});
 ```
 
 ## License
@@ -169,10 +132,8 @@ bower install ryanmorr/fx
 This project is dedicated to the public domain as described by the [Unlicense](http://unlicense.org/).
 
 [project-url]: https://github.com/ryanmorr/fx
-[version-image]: https://badge.fury.io/gh/ryanmorr%2Ffx.svg
-[build-url]: https://travis-ci.org/ryanmorr/fx
-[build-image]: https://travis-ci.org/ryanmorr/fx.svg
-[dependencies-image]: https://david-dm.org/ryanmorr/fx.svg
-[license-image]: https://img.shields.io/badge/license-Unlicense-blue.svg
+[version-image]: https://img.shields.io/github/package-json/v/ryanmorr/fx?color=blue&style=flat-square
+[build-url]: https://github.com/ryanmorr/fx/actions
+[build-image]: https://img.shields.io/github/actions/workflow/status/ryanmorr/fx/node.js.yml?style=flat-square
+[license-image]: https://img.shields.io/github/license/ryanmorr/fx?color=blue&style=flat-square
 [license-url]: UNLICENSE
-[file-size-image]: https://badge-size.herokuapp.com/ryanmorr/fx/master/dist/fx.min.js.svg?color=blue&label=file%20size
