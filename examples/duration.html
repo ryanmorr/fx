@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FX Custom Duration Example</title>
+    <script src="../dist/umd/fx.js"></script>
+</head>
+<body>
+
+<style>
+input {
+    vertical-align: middle;
+    margin: 0 15px;
+}
+
+#fx-element {
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    width: 100px;
+    height: 100px;
+    background-color: #FF0000;
+}
+</style>
+
+<section>
+    <label>Duration:</label>
+    <input type="number" value="1000">
+    <button>Animate</button>
+</section>
+
+<div id="fx-element"></div>
+
+<script>
+let duration = 1000;
+const input = document.querySelector('input');
+const btn = document.querySelector('button');
+const el = document.querySelector('#fx-element');
+
+input.addEventListener('input', () => {
+    duration = Number(input.value);
+});
+
+btn.addEventListener('click', () => {
+    fx(el, {translateX: 1000, duration});
+});
+
+</script>
+
+</body>
+</html>
