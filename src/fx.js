@@ -7,7 +7,7 @@ const RGB_RE = /^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([.\d]+))?\)$/
 const HEX6_RE = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
 const HEX3_RE = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
 
-const defaultProps = {
+const defaultConfig = {
     duration: 1000,
     easing: 'ease-in-out'
 };
@@ -239,9 +239,9 @@ function animate(el, props, duration, ease) {
     });
 }
 
-export default function fx(target, props) {
+export default function fx(target, config) {
     const elements = typeof target === 'string' ? document.querySelectorAll(target) : target;
-    const {duration, easing} = Object.assign(defaultProps, props);
+    const {duration, easing, ...props} = Object.assign(defaultConfig, config);
     const ease = typeof easing === 'string' ? easingFunctions[easing] : easing;
     if (elements.nodeName) {
         return animate(elements, props, duration, ease);
